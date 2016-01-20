@@ -1,0 +1,34 @@
+{
+	"ArtifactsDest": "dist",
+	"Tasks": [
+		"deb",
+		"other-mapped-files=/etc/nixy.toml: nixy.toml"
+	],
+	"TasksExclude": [
+		"go-install"
+	],
+	"Arch": "amd64",
+	"Os": "linux",
+	"PackageVersion": "0.0.1",
+	"TaskSettings": {
+		"deb": {
+			"armarch": "",
+			"bin-dir": "/usr/bin",
+			"go-sources-dir": ".",
+			"metadata": {
+				"description": "nixy - nginx marathon/mesos proxy",
+				"maintainer": "Benjamin Mårtensson (https://github.com/martensson)",
+				"maintainerEmail": "benjamin@martensson.io"
+			},
+			"other-mapped-files": {
+				"/etc/init/nixy.conf": "nixy-upstart.conf",
+				"/etc/nixy-example.toml": "nixy.toml"
+			}
+		},
+		"publish-github": {
+			"owner": "martensson",
+			"repository": "nixy"
+		}
+	},
+	"ConfigVersion": "0.1"
+}
