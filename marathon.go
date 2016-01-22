@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -104,6 +103,10 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 				if s, ok := v.Labels["subdomain"]; ok {
 					appid = s
 				}
+				// this is temporary to support moxy subdomains.
+				if s, ok := v.Labels["moxy_subdomain"]; ok {
+					appid = s
+				}
 				if len(v.HealthChecks) > 0 {
 					apphealth = true
 				}
@@ -138,16 +141,12 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 }
 
 func writeConf() error {
-	templ, err := ioutil.ReadFile(config.Nginx_template)
-	if err != nil {
-		return err
-	}
-	t := template.New("Nginx template")
-	t, err = t.Parse(string(templ))
+	t, err := template.New(config.Nginx_template).ParseFiles(config.Nginx_template)
 	if err != nil {
 		return err
 	}
 	f, err := os.Create(config.Nginx_config)
+	defer f.Close()
 	if err != nil {
 		return err
 	}

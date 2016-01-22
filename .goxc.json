@@ -2,14 +2,15 @@
 	"ArtifactsDest": "dist",
 	"Tasks": [
 		"deb",
-		"other-mapped-files=/etc/nixy.toml: nixy.toml"
+		"other-mapped-files=/etc/nixy-example.toml: nixy.toml",
+		"other-mapped-files=/etc/nginx/nginx-example.tmpl: nginx.tmpl"
 	],
 	"TasksExclude": [
 		"go-install"
 	],
 	"Arch": "amd64",
 	"Os": "linux",
-	"PackageVersion": "0.0.1",
+	"PackageVersion": "0.0.2",
 	"TaskSettings": {
 		"deb": {
 			"armarch": "",
@@ -22,6 +23,7 @@
 			},
 			"other-mapped-files": {
 				"/etc/init/nixy.conf": "nixy-upstart.conf",
+				"/etc/nginx/nginx-example.tmpl": "nginx.tmpl",
 				"/etc/nixy-example.toml": "nixy.toml"
 			}
 		},
@@ -30,5 +32,5 @@
 			"repository": "nixy"
 		}
 	},
-	"ConfigVersion": "0.1"
+	"ConfigVersion": "0.9"
 }
