@@ -141,7 +141,7 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 }
 
 func writeConf() error {
-	t, err := template.New(config.Nginx_template).ParseFiles(config.Nginx_template)
+	t, err := template.New("nginx.tmpl").ParseFiles(config.Nginx_template)
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,7 @@ func writeConf() error {
 	if err != nil {
 		return err
 	}
-	err = t.Execute(f, apps.Apps)
+	err = t.ExecuteTemplate(f, "nginx.tmpl", apps.Apps)
 	if err != nil {
 		return err
 	}
