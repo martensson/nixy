@@ -26,6 +26,7 @@ http {
         server_tokens off;
         server_name {{$app}} {{$app}}.*;
         keepalive_timeout 10;
+        client_max_body_size 128m;
         location / {
             proxy_set_header HOST $host;
             proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
