@@ -8,6 +8,12 @@ events {
     multi_accept on;
 }
 http {
+    add_header X-Proxy {{ .Xproxy }} always;
+    access_log off;
+    server_tokens off;
+    keepalive_timeout 10;
+    client_max_body_size 128m;
+    
     server {
         listen       7000 default_server;
         server_name  _;
@@ -17,16 +23,13 @@ http {
         }
     }
 
-{{range $app, $tasks := .}}
+{{range $app, $tasks := .Apps.Apps}}
     upstream {{$app}} {
         {{ range $tasks.Tasks}}server {{ . }};
     {{end}}}
     server {
         listen 7000;
-        server_tokens off;
         server_name {{$app}} {{$app}}.*;
-        keepalive_timeout 10;
-        client_max_body_size 128m;
         location / {
             proxy_set_header HOST $host;
             proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
@@ -35,7 +38,6 @@ http {
             proxy_set_header Connection "";
             proxy_pass http://{{$app}};
         }
-        access_log off;
     }
 {{end}}
 }

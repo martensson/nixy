@@ -22,8 +22,6 @@ type Apps struct {
 	Apps map[string]App
 }
 
-var apps Apps
-
 type Config struct {
 	Port           string
 	Xproxy         string
@@ -32,6 +30,7 @@ type Config struct {
 	Nginx_template string
 	Nginx_cmd      string
 	Statsd         string
+	Apps           Apps
 }
 
 var config Config
@@ -51,8 +50,21 @@ func nixy_reload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func nixy_test(w http.ResponseWriter, r *http.Request) {
+	err := testNginx()
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	} else {
+		w.Write([]byte("OK"))
+		return
+	}
+}
+
 func nixy_apps(w http.ResponseWriter, r *http.Request) {
-	b, _ := json.MarshalIndent(apps, "", "  ")
+	w.Header().Add("Content-Type", "application/json; charset=utf-8")
+	b, _ := json.MarshalIndent(config.Apps.Apps, "", "  ")
 	w.Write(b)
 	return
 }
@@ -75,6 +87,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/reload", nixy_reload)
 	mux.HandleFunc("/v1/apps", nixy_apps)
+	mux.HandleFunc("/v1/test", nixy_test)
 	mux.HandleFunc("/v1/stats", func(w http.ResponseWriter, req *http.Request) {
 		stats := nixystats.Data()
 		b, _ := json.MarshalIndent(stats, "", "  ")

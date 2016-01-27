@@ -10,7 +10,7 @@ marathon = "http://localhost:8080"
 # nginx
 nginx_config = "/etc/nginx/nginx.conf"
 nginx_template = "/etc/nginx/nginx.tmpl"
-nginx_cmd = "nginx"
+nginx_cmd = "nginx" # could be openresty
 
 # statsd settings
 statsd = "localhost:8125" # optional if you want to graph req/s per app

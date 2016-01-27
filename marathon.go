@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -49,7 +52,7 @@ func callbackworker() {
 				<-callbackqueue
 				err := reload()
 				if err != nil {
-					log.Println(err.Error())
+					log.Println("config failed")
 				} else {
 					log.Println("config updated")
 				}
@@ -90,9 +93,9 @@ func fetchApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) error {
 }
 
 func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
-	apps.Lock()
-	defer apps.Unlock()
-	apps.Apps = make(map[string]App)
+	config.Apps.Lock()
+	defer config.Apps.Unlock()
+	config.Apps.Apps = make(map[string]App)
 	for _, task := range jsontasks.Tasks {
 		// Use regex to remove characters that are not allowed in hostnames
 		re := regexp.MustCompile("[^0-9a-z-]")
@@ -129,13 +132,13 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 				continue
 			}
 		}
-		if s, ok := apps.Apps[appid]; ok {
+		if s, ok := config.Apps.Apps[appid]; ok {
 			s.Tasks = append(s.Tasks, task.Host+":"+strconv.FormatInt(task.Ports[0], 10))
-			apps.Apps[appid] = s
+			config.Apps.Apps[appid] = s
 		} else {
 			var s = App{}
 			s.Tasks = []string{task.Host + ":" + strconv.FormatInt(task.Ports[0], 10)}
-			apps.Apps[appid] = s
+			config.Apps.Apps[appid] = s
 		}
 	}
 }
@@ -150,18 +153,35 @@ func writeConf() error {
 	if err != nil {
 		return err
 	}
-	err = t.ExecuteTemplate(f, "nginx.tmpl", apps.Apps)
+	err = t.ExecuteTemplate(f, "nginx.tmpl", config)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func reloadNginx() error {
-	cmd := exec.Command(config.Nginx_cmd, "-s", "reload")
+func testNginx() error {
+	cmd := exec.Command(config.Nginx_cmd, "-c", config.Nginx_config, "-t")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
 	err := cmd.Run() // will wait for command to return
 	if err != nil {
-		return err
+		msg := fmt.Sprint(err) + ": " + stderr.String()
+		errstd := errors.New(msg)
+		return errstd
+	}
+	return nil
+}
+
+func reloadNginx() error {
+	cmd := exec.Command(config.Nginx_cmd, "-s", "reload")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	err := cmd.Run() // will wait for command to return
+	if err != nil {
+		msg := fmt.Sprint(err) + ": " + stderr.String()
+		errstd := errors.New(msg)
+		return errstd
 	}
 	return nil
 }
@@ -178,6 +198,11 @@ func reload() error {
 	err = writeConf()
 	if err != nil {
 		log.Println("Unable to generate nginx config:", err)
+		return err
+	}
+	err = testNginx()
+	if err != nil {
+		log.Println("nginx config test:", err)
 		return err
 	}
 	err = reloadNginx()
