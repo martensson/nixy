@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/BurntSushi/toml"
@@ -38,6 +39,12 @@ var statsd g2s.Statter
 
 func nixy_reload(w http.ResponseWriter, r *http.Request) {
 	log.Println("callback received from Marathon")
+	if config.Statsd != "" {
+		go func() {
+			hostname, _ := os.Hostname()
+			statsd.Counter(1.0, "nixy."+hostname+".reload", 1)
+		}()
+	}
 	select {
 	case callbackqueue <- true: // Add reload to our queue channel, unless it is full of course.
 		w.WriteHeader(202)
