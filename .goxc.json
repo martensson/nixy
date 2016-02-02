@@ -10,7 +10,7 @@
 	],
 	"Arch": "amd64",
 	"Os": "linux",
-	"PackageVersion": "0.0.6",
+	"PackageVersion": "0.1.0",
 	"TaskSettings": {
 		"deb": {
 			"armarch": "",
