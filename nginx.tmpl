@@ -23,7 +23,7 @@ http {
         }
     }
 
-{{range $app, $tasks := .Apps.Apps}}
+{{range $app, $tasks := .Apps}}
     upstream {{$app}} {
         {{ range $tasks.Tasks}}server {{ . }};
     {{end}}}

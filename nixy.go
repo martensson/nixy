@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"sync"
 
 	"github.com/BurntSushi/toml"
@@ -18,12 +17,9 @@ import (
 type App struct {
 	Tasks []string
 }
-type Apps struct {
-	sync.RWMutex
-	Apps map[string]App
-}
 
 type Config struct {
+	sync.RWMutex
 	Port           string
 	Xproxy         string
 	Marathon       string
@@ -31,7 +27,7 @@ type Config struct {
 	Nginx_template string
 	Nginx_cmd      string
 	Statsd         string
-	Apps           Apps
+	Apps           map[string]App
 }
 
 var config Config
@@ -39,12 +35,6 @@ var statsd g2s.Statter
 
 func nixy_reload(w http.ResponseWriter, r *http.Request) {
 	log.Println("callback received from Marathon")
-	if config.Statsd != "" {
-		go func() {
-			hostname, _ := os.Hostname()
-			statsd.Counter(1.0, "nixy."+hostname+".reload", 1)
-		}()
-	}
 	select {
 	case callbackqueue <- true: // Add reload to our queue channel, unless it is full of course.
 		w.WriteHeader(202)
@@ -57,21 +47,31 @@ func nixy_reload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func nixy_test(w http.ResponseWriter, r *http.Request) {
-	err := testNginx()
+func nixy_health(w http.ResponseWriter, r *http.Request) {
+	health := make(map[string]string)
+	err := checkTmpl()
 	if err != nil {
 		w.WriteHeader(500)
-		w.Write([]byte(err.Error()))
-		return
+		health["Template"] = err.Error()
 	} else {
-		w.Write([]byte("OK"))
-		return
+		health["Template"] = "OK"
 	}
+	err = checkConf()
+	if err != nil {
+		w.WriteHeader(500)
+		health["Config"] = err.Error()
+	} else {
+		health["Config"] = "OK"
+	}
+	w.Header().Add("Content-Type", "application/json; charset=utf-8")
+	b, _ := json.MarshalIndent(health, "", "  ")
+	w.Write(b)
+	return
 }
 
 func nixy_apps(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json; charset=utf-8")
-	b, _ := json.MarshalIndent(config.Apps.Apps, "", "  ")
+	b, _ := json.MarshalIndent(config.Apps, "", "  ")
 	w.Write(b)
 	return
 }
@@ -94,7 +94,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/reload", nixy_reload)
 	mux.HandleFunc("/v1/apps", nixy_apps)
-	mux.HandleFunc("/v1/test", nixy_test)
+	mux.HandleFunc("/v1/health", nixy_health)
 	mux.HandleFunc("/v1/stats", func(w http.ResponseWriter, req *http.Request) {
 		stats := nixystats.Data()
 		b, _ := json.MarshalIndent(stats, "", "  ")

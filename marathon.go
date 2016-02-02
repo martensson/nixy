@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"text/template"
@@ -53,8 +55,20 @@ func callbackworker() {
 				err := reload()
 				if err != nil {
 					log.Println("config failed")
+					if config.Statsd != "" {
+						go func() {
+							hostname, _ := os.Hostname()
+							statsd.Counter(1.0, "nixy."+hostname+".reload.failed", 1)
+						}()
+					}
 				} else {
 					log.Println("config updated")
+					if config.Statsd != "" {
+						go func() {
+							hostname, _ := os.Hostname()
+							statsd.Counter(1.0, "nixy."+hostname+".reload.success", 1)
+						}()
+					}
 				}
 			}
 		}
@@ -93,9 +107,9 @@ func fetchApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) error {
 }
 
 func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
-	config.Apps.Lock()
-	defer config.Apps.Unlock()
-	config.Apps.Apps = make(map[string]App)
+	config.Lock()
+	defer config.Unlock()
+	config.Apps = make(map[string]App)
 	for _, task := range jsontasks.Tasks {
 		// Use regex to remove characters that are not allowed in hostnames
 		re := regexp.MustCompile("[^0-9a-z-]")
@@ -115,6 +129,10 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 				}
 			}
 		}
+		// Lets skip tasks that does not expose any ports.
+		if len(task.Ports) == 0 {
+			continue
+		}
 		if apphealth {
 			if len(task.HealthCheckResults) == 0 {
 				// this means tasks is being deployed but not yet monitored as alive. Assume down.
@@ -132,19 +150,19 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 				continue
 			}
 		}
-		if s, ok := config.Apps.Apps[appid]; ok {
+		if s, ok := config.Apps[appid]; ok {
 			s.Tasks = append(s.Tasks, task.Host+":"+strconv.FormatInt(task.Ports[0], 10))
-			config.Apps.Apps[appid] = s
+			config.Apps[appid] = s
 		} else {
 			var s = App{}
 			s.Tasks = []string{task.Host + ":" + strconv.FormatInt(task.Ports[0], 10)}
-			config.Apps.Apps[appid] = s
+			config.Apps[appid] = s
 		}
 	}
 }
 
 func writeConf() error {
-	t, err := template.New("nginx.tmpl").ParseFiles(config.Nginx_template)
+	t, err := template.New(filepath.Base(config.Nginx_template)).ParseFiles(config.Nginx_template)
 	if err != nil {
 		return err
 	}
@@ -153,14 +171,26 @@ func writeConf() error {
 	if err != nil {
 		return err
 	}
-	err = t.ExecuteTemplate(f, "nginx.tmpl", config)
+	err = t.Execute(f, config)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func testNginx() error {
+func checkTmpl() error {
+	t, err := template.New(filepath.Base(config.Nginx_template)).ParseFiles(config.Nginx_template)
+	if err != nil {
+		return err
+	}
+	err = t.Execute(ioutil.Discard, config)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func checkConf() error {
 	cmd := exec.Command(config.Nginx_cmd, "-c", config.Nginx_config, "-t")
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -198,11 +228,6 @@ func reload() error {
 	err = writeConf()
 	if err != nil {
 		log.Println("Unable to generate nginx config:", err)
-		return err
-	}
-	err = testNginx()
-	if err != nil {
-		log.Println("nginx config test:", err)
 		return err
 	}
 	err = reloadNginx()
