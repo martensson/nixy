@@ -43,8 +43,6 @@ statsd = "localhost:8125" # optional if you want statistics
 ```
 3. Install nginx or openresty and start service.
 
-3. Add the nixy url + `/v1/reload` to your callbacks in Marathon.
-
 4. Run nixy!
 
 ## Using Nixy
