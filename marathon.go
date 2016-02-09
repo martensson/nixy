@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,6 +15,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"text/template"
 	"time"
 )
@@ -41,20 +44,73 @@ type MarathonApps struct {
 	} `json:"apps"`
 }
 
-// buffer of two, because we dont really need more.
-var callbackqueue = make(chan bool, 2)
+// Global http transport for connection reuse
+var tr = &http.Transport{}
 
-func callbackworker() {
+func eventStream() {
+	go func() {
+		client := &http.Client{
+			Timeout:   0 * time.Second,
+			Transport: tr,
+		}
+		ticker := time.NewTicker(1 * time.Second)
+		for _ = range ticker.C {
+			req, err := http.NewRequest("GET", config.Marathon+"/v2/events", nil)
+			req.Header.Set("Accept", "text/event-stream")
+			if err != nil {
+				errorMsg := "An error occurred while creating request to Marathon events system: %s\n"
+				log.Printf(errorMsg, err)
+				continue
+			}
+			resp, err := client.Do(req)
+			if err != nil {
+				errorMsg := "An error occurred while making a request to Marathon events system: %s\n"
+				log.Printf(errorMsg, err)
+				continue
+			}
+			defer resp.Body.Close()
+			reader := bufio.NewReader(resp.Body)
+			for {
+				line, err := reader.ReadString('\n')
+				if err != nil {
+					if err != io.EOF {
+						errorMsg := "An error occurred while reading Marathon event: %s\n"
+						log.Printf(errorMsg, err)
+					}
+					break
+				}
+				if !strings.HasPrefix(line, "event: ") {
+					continue
+				}
+				log.Println("Marathon event update: " + strings.TrimSpace(line[6:]))
+				select {
+				case eventqueue <- true: // Add reload to our queue channel, unless it is full of course.
+				default:
+					log.Println("queue is full")
+				}
+
+			}
+			log.Println("Event stream connection was closed. Re-opening...")
+		}
+	}()
+}
+
+// buffer of two, because we dont really need more.
+var eventqueue = make(chan bool, 2)
+
+func eventWorker() {
 	// a ticker channel to limit reloads to marathon, 1s is enough for now.
 	ticker := time.NewTicker(1000 * time.Millisecond)
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
-				<-callbackqueue
+				<-eventqueue
+				start := time.Now()
 				err := reload()
+				elapsed := time.Since(start)
 				if err != nil {
-					log.Println("config failed")
+					log.Println("config update failed")
 					if config.Statsd != "" {
 						go func() {
 							hostname, _ := os.Hostname()
@@ -62,12 +118,13 @@ func callbackworker() {
 						}()
 					}
 				} else {
-					log.Println("config updated")
+					log.Printf("config update took %s\n", elapsed)
 					if config.Statsd != "" {
-						go func() {
+						go func(elapsed time.Duration) {
 							hostname, _ := os.Hostname()
 							statsd.Counter(1.0, "nixy."+hostname+".reload.success", 1)
-						}()
+							statsd.Timing(1.0, "nixy."+hostname+".reload.time", elapsed)
+						}(elapsed)
 					}
 				}
 			}
@@ -77,9 +134,13 @@ func callbackworker() {
 
 func fetchApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) error {
 	client := &http.Client{
-		Timeout: 3 * time.Second,
+		Timeout:   5 * time.Second,
+		Transport: tr,
 	}
-	r, _ := http.NewRequest("GET", config.Marathon+"/v2/tasks", nil)
+	r, err := http.NewRequest("GET", config.Marathon+"/v2/tasks", nil)
+	if err != nil {
+		return err
+	}
 	r.Header.Set("Accept", "application/json")
 	resp, err := client.Do(r)
 	defer resp.Body.Close()
@@ -91,7 +152,10 @@ func fetchApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) error {
 	if err != nil {
 		return err
 	}
-	r, _ = http.NewRequest("GET", config.Marathon+"/v2/apps", nil)
+	r, err = http.NewRequest("GET", config.Marathon+"/v2/apps", nil)
+	if err != nil {
+		return err
+	}
 	r.Header.Set("Accept", "application/json")
 	resp, err = client.Do(r)
 	defer resp.Body.Close()

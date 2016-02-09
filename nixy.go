@@ -34,9 +34,9 @@ var config Config
 var statsd g2s.Statter
 
 func nixy_reload(w http.ResponseWriter, r *http.Request) {
-	log.Println("callback received from Marathon")
+	log.Println("Marathon reload triggered")
 	select {
-	case callbackqueue <- true: // Add reload to our queue channel, unless it is full of course.
+	case eventqueue <- true: // Add reload to our queue channel, unless it is full of course.
 		w.WriteHeader(202)
 		fmt.Fprintln(w, "queued")
 		return
@@ -106,8 +106,8 @@ func main() {
 		Addr:    ":" + config.Port,
 		Handler: handler,
 	}
-	callbackworker()
-	callbackqueue <- true
+	eventStream()
+	eventWorker()
 	log.Println("Starting nixy on :" + config.Port)
 	err = s.ListenAndServe()
 	if err != nil {
