@@ -21,7 +21,6 @@ All versions of Marathon >= v0.9.0
 ## Getting started
 
 1. Install nixy from pre-compiled packages. Check `releases` page.
-
 2. Edit config (default on ubuntu is /etc/nixy.toml):
 ``` toml
 # nixy listening port
@@ -40,9 +39,8 @@ nginx_cmd = "nginx" # could be openresty
 
 # statsd settings
 statsd = "localhost:8125" # optional if you want statistics
-```
+``` 
 3. Install nginx or openresty and start service.
-
 4. Run nixy!
 
 ## Using Nixy
