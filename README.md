@@ -22,24 +22,24 @@ All versions of Marathon >= v0.9.0
 
 1. Install nixy from pre-compiled packages. Check `releases` page.
 2. Edit config (default on ubuntu is /etc/nixy.toml):
-``` toml
-# nixy listening port
-port = "6000"
+    ``` toml
+    # nixy listening port
+    port = "6000"
 
-# optional X-Proxy header added in all http responses
-xproxy = "hostname"
+    # optional X-Proxy header added in all http responses
+    xproxy = "hostname"
 
-# marathon api
-marathon = "http://localhost:8080"
+    # marathon api
+    marathon = "http://localhost:8080"
 
-# nginx
-nginx_config = "/etc/nginx/nginx.conf"
-nginx_template = "/etc/nginx/nginx.tmpl"
-nginx_cmd = "nginx" # could be openresty
+    # nginx
+    nginx_config = "/etc/nginx/nginx.conf"
+    nginx_template = "/etc/nginx/nginx.tmpl"
+    nginx_cmd = "nginx" # could be openresty
 
-# statsd settings
-statsd = "localhost:8125" # optional if you want statistics
-``` 
+    # statsd settings
+    statsd = "localhost:8125" # optional if you want statistics
+    ``` 
 3. Install nginx or openresty and start service.
 4. Run nixy!
 
