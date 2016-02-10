@@ -33,7 +33,7 @@ All versions of Marathon >= v0.9.0
     # marathon api
     marathon = "http://localhost:8080"
     user = "" # leave empty if no auth is required.
-    pass = "" # leave emtpy if no auth is required.
+    pass = ""
     
     # nginx
     nginx_config = "/etc/nginx/nginx.conf"

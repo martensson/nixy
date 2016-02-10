@@ -5,7 +5,7 @@ xproxy = "hostname"
 # marathon api
 marathon = "http://localhost:8080"
 user = "" # leave empty if no auth is required.
-pass = "" # leave emtpy if no auth is required.
+pass = ""
 # nginx
 nginx_config = "/etc/nginx/nginx.conf"
 nginx_template = "/etc/nginx/nginx.tmpl"
