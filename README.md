@@ -11,6 +11,7 @@ Features:
 * Statistics via statsd (successfull/failed updates, timings)
 * Automatic service discovery of all running tasks inside Mesos/Marathon
 * Uses the newer event stream (added in Marathon v0.9.0), no need to use callbacks.
+* Basic auth support
 * Health check url for your template and nginx configuration
 * + more on the works...
 
@@ -25,20 +26,18 @@ All versions of Marathon >= v0.9.0
     ``` toml
     # nixy listening port
     port = "6000"
-
-    # optional X-Proxy header added in all http responses
+    # optional X-Proxy header name
     xproxy = "hostname"
-
     # marathon api
     marathon = "http://localhost:8080"
-
+    user = "" # leave empty if no auth is required.
+    pass = "" # leave emtpy if no auth is required.
     # nginx
     nginx_config = "/etc/nginx/nginx.conf"
     nginx_template = "/etc/nginx/nginx.tmpl"
-    nginx_cmd = "nginx" # could be openresty
-
+    nginx_cmd = "nginx" # optinally openresty
     # statsd settings
-    statsd = "localhost:8125" # optional if you want statistics
+    statsd = "localhost:8125" # optional for statistics
     ``` 
 3. Install nginx or openresty and start service.
 4. Run nixy!

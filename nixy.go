@@ -25,6 +25,8 @@ type Config struct {
 	Port           string
 	Xproxy         string
 	Marathon       string
+	User           string
+	Pass           string
 	Nginx_config   string
 	Nginx_template string
 	Nginx_cmd      string

@@ -53,11 +53,14 @@ func eventStream() {
 		ticker := time.NewTicker(1 * time.Second)
 		for _ = range ticker.C {
 			req, err := http.NewRequest("GET", config.Marathon+"/v2/events", nil)
-			req.Header.Set("Accept", "text/event-stream")
 			if err != nil {
 				errorMsg := "An error occurred while creating request to Marathon events system: %s\n"
 				log.Printf(errorMsg, err)
 				continue
+			}
+			req.Header.Set("Accept", "text/event-stream")
+			if config.User != "" {
+				req.SetBasicAuth(config.User, config.Pass)
 			}
 			resp, err := client.Do(req)
 			if err != nil {
@@ -134,12 +137,15 @@ func fetchApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) error {
 		Timeout:   5 * time.Second,
 		Transport: tr,
 	}
-	r, err := http.NewRequest("GET", config.Marathon+"/v2/tasks", nil)
+	req, err := http.NewRequest("GET", config.Marathon+"/v2/tasks", nil)
 	if err != nil {
 		return err
 	}
-	r.Header.Set("Accept", "application/json")
-	resp, err := client.Do(r)
+	req.Header.Set("Accept", "application/json")
+	if config.User != "" {
+		req.SetBasicAuth(config.User, config.Pass)
+	}
+	resp, err := client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {
 		return err
@@ -149,12 +155,15 @@ func fetchApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) error {
 	if err != nil {
 		return err
 	}
-	r, err = http.NewRequest("GET", config.Marathon+"/v2/apps", nil)
+	req, err = http.NewRequest("GET", config.Marathon+"/v2/apps", nil)
 	if err != nil {
 		return err
 	}
-	r.Header.Set("Accept", "application/json")
-	resp, err = client.Do(r)
+	req.Header.Set("Accept", "application/json")
+	if config.User != "" {
+		req.SetBasicAuth(config.User, config.Pass)
+	}
+	resp, err = client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {
 		return err
