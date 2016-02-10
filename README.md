@@ -26,16 +26,20 @@ All versions of Marathon >= v0.9.0
     ``` toml
     # nixy listening port
     port = "6000"
+
     # optional X-Proxy header name
     xproxy = "hostname"
+    
     # marathon api
     marathon = "http://localhost:8080"
     user = "" # leave empty if no auth is required.
     pass = "" # leave emtpy if no auth is required.
+    
     # nginx
     nginx_config = "/etc/nginx/nginx.conf"
     nginx_template = "/etc/nginx/nginx.tmpl"
     nginx_cmd = "nginx" # optinally openresty
+    
     # statsd settings
     statsd = "localhost:8125" # optional for statistics
     ``` 
