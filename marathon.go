@@ -44,9 +44,6 @@ type MarathonApps struct {
 	} `json:"apps"`
 }
 
-// Global http transport for connection reuse
-var tr = &http.Transport{}
-
 func eventStream() {
 	go func() {
 		client := &http.Client{

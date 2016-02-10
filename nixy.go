@@ -7,9 +7,11 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/BurntSushi/toml"
+	"github.com/gorilla/mux"
 	"github.com/peterbourgon/g2s"
 	"github.com/thoas/stats"
 )
@@ -30,8 +32,12 @@ type Config struct {
 	Apps           map[string]App
 }
 
+var VERSION string
 var config Config
 var statsd g2s.Statter
+
+// Global http transport for connection reuse
+var tr = &http.Transport{}
 
 func nixy_reload(w http.ResponseWriter, r *http.Request) {
 	log.Println("Marathon reload triggered")
@@ -76,9 +82,19 @@ func nixy_apps(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func nixy_version(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "nixy "+VERSION)
+	return
+}
+
 func main() {
 	configtoml := flag.String("f", "nixy.toml", "Path to config. (default nixy.toml)")
+	version := flag.Bool("v", false, "prints current nixy version")
 	flag.Parse()
+	if *version {
+		fmt.Println(VERSION)
+		os.Exit(0)
+	}
 	file, err := ioutil.ReadFile(*configtoml)
 	if err != nil {
 		log.Fatal(err)
@@ -91,7 +107,9 @@ func main() {
 		statsd, _ = g2s.Dial("udp", config.Statsd)
 	}
 	nixystats := stats.New()
-	mux := http.NewServeMux()
+	//mux := http.NewServeMux()
+	mux := mux.NewRouter()
+	mux.HandleFunc("/", nixy_version)
 	mux.HandleFunc("/v1/reload", nixy_reload)
 	mux.HandleFunc("/v1/apps", nixy_apps)
 	mux.HandleFunc("/v1/health", nixy_health)
