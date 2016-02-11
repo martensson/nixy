@@ -7,15 +7,17 @@ Nixy is a daemon that automatically configures Nginx for web services deployed o
 Features:
 
 * Reverse proxy and load balancer for your microservices running inside Mesos and Marathon
+* Single binary with no other dependencies *(except Nginx/Openresty)*
+* Written in Go to be blazingly fast and concurrent.
 * All features of Nginx, loadbalancing, websockets, HTTPS, HTTP/2, caching, static file serving, etc.
+* Zero downtime thanks to Nginx fallback mechanism for backend errors.
 * Easy to customize with templating.
-* Single binary with no other dependencies (except Nginx/Openresty)
-* Statistics via statsd (successfull/failed updates, timings)
-* Automatic service discovery of all running tasks inside Mesos/Marathon
-* Uses the newer event stream (added in Marathon v0.9.0), no need to use callbacks.
-* Basic auth support
-* Health check url for your template and nginx configuration
-* + more on the works...
+* Statistics via statsd *(successfull/failed updates, timings)*.
+* Real-time updates via Marathon's event stream *(Marathon v0.9.0), no need for callbacks.*
+* Automatic service discovery of all running tasks inside Mesos/Marathon, including health check status.
+* Basic auth support.
+* Health check probe for errors in template or nginx configuration.
+* + more...
 
 ## Compatibility
 
