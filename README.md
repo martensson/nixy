@@ -45,15 +45,15 @@ All versions of Marathon >= v0.9.0
     # statsd settings
     statsd = "localhost:8125" # optional for statistics
     ``` 
-3. Install nginx or openresty and start service.
-4. Run nixy!
+3. Install [nginx](http://nginx.org/en/download.html) or [openresty](https://openresty.org/) and start the service.
+4. start the nixy service!
 
 ## Using Nixy
 
 Routing is based on the HTTP Host header matching app name by default.
 
 This is easy to change and customize to your own choosing by editing the
-nginx.tmpl file.
+nginx.tmpl file. For example if you prefer routing based on uri instead of subdomains.
 
 Example to access your apps app1,app2,app3 running inside Mesos and Marathon:
 
@@ -61,7 +61,7 @@ Example to access your apps app1,app2,app3 running inside Mesos and Marathon:
     curl -i localhost/ -H 'Host: app2.example.com'
     curl -i localhost/ -H 'Host: app3.example.com'
 
-Assuming you have nginx listening in port 80.
+Assuming you have configured nginx on port 80.
 
 ### To set custom subdomain for an application
 
