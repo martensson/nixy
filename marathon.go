@@ -137,41 +137,64 @@ func fetchApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) error {
 		Timeout:   5 * time.Second,
 		Transport: tr,
 	}
-	req, err := http.NewRequest("GET", config.Marathon+"/v2/tasks", nil)
-	if err != nil {
-		return err
+	// take advantage of goroutines and run both reqs concurrent.
+	appschn := make(chan error)
+	taskschn := make(chan error)
+	go func() {
+		req, err := http.NewRequest("GET", config.Marathon+"/v2/tasks", nil)
+		if err != nil {
+			taskschn <- err
+			return
+		}
+		req.Header.Set("Accept", "application/json")
+		if config.User != "" {
+			req.SetBasicAuth(config.User, config.Pass)
+		}
+		resp, err := client.Do(req)
+		defer resp.Body.Close()
+		if err != nil {
+			taskschn <- err
+			return
+		}
+		decoder := json.NewDecoder(resp.Body)
+		err = decoder.Decode(&jsontasks)
+		if err != nil {
+			taskschn <- err
+			return
+		}
+		taskschn <- nil
+	}()
+	go func() {
+		req, err := http.NewRequest("GET", config.Marathon+"/v2/apps", nil)
+		if err != nil {
+			appschn <- err
+			return
+		}
+		req.Header.Set("Accept", "application/json")
+		if config.User != "" {
+			req.SetBasicAuth(config.User, config.Pass)
+		}
+		resp, err := client.Do(req)
+		defer resp.Body.Close()
+		if err != nil {
+			appschn <- err
+			return
+		}
+		decoder := json.NewDecoder(resp.Body)
+		err = decoder.Decode(&jsonapps)
+		if err != nil {
+			appschn <- err
+			return
+		}
+		appschn <- nil
+	}()
+	appserr := <-appschn
+	taskserr := <-taskschn
+	if appserr != nil {
+		return appserr
 	}
-	req.Header.Set("Accept", "application/json")
-	if config.User != "" {
-		req.SetBasicAuth(config.User, config.Pass)
-	}
-	resp, err := client.Do(req)
-	defer resp.Body.Close()
-	if err != nil {
-		return err
-	}
-	decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(&jsontasks)
-	if err != nil {
-		return err
-	}
-	req, err = http.NewRequest("GET", config.Marathon+"/v2/apps", nil)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Accept", "application/json")
-	if config.User != "" {
-		req.SetBasicAuth(config.User, config.Pass)
-	}
-	resp, err = client.Do(req)
-	defer resp.Body.Close()
-	if err != nil {
-		return err
-	}
-	decoder = json.NewDecoder(resp.Body)
-	err = decoder.Decode(&jsonapps)
-	if err != nil {
-		return err
+	if taskserr != nil {
+		return taskserr
 	}
 	return nil
 }
