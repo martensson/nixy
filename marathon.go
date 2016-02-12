@@ -240,6 +240,7 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 	defer config.Unlock()
 	config.Apps = make(map[string]App)
 	for _, app := range jsonapps.Apps {
+	OUTER:
 		for _, task := range jsontasks.Tasks {
 			if task.AppId != app.Id {
 				continue
@@ -284,7 +285,7 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 				for k, v := range config.Apps {
 					if newapp.Host == v.Host {
 						log.Printf("%s and %s share same subdomain '%s', ignoring %s.", k, app.Id, v.Host, app.Id)
-						continue
+						continue OUTER
 					}
 				}
 				newapp.Labels = app.Labels
