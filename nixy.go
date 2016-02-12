@@ -13,7 +13,6 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/gorilla/mux"
 	"github.com/peterbourgon/g2s"
-	"github.com/thoas/stats"
 )
 
 type App struct {
@@ -111,23 +110,14 @@ func main() {
 	if config.Statsd != "" {
 		statsd, _ = g2s.Dial("udp", config.Statsd)
 	}
-	nixystats := stats.New()
-	//mux := http.NewServeMux()
 	mux := mux.NewRouter()
 	mux.HandleFunc("/", nixy_version)
 	mux.HandleFunc("/v1/reload", nixy_reload)
 	mux.HandleFunc("/v1/config", nixy_config)
 	mux.HandleFunc("/v1/health", nixy_health)
-	mux.HandleFunc("/v1/stats", func(w http.ResponseWriter, req *http.Request) {
-		stats := nixystats.Data()
-		b, _ := json.MarshalIndent(stats, "", "  ")
-		w.Write(b)
-		return
-	})
-	handler := nixystats.Handler(mux)
 	s := &http.Server{
 		Addr:    ":" + config.Port,
-		Handler: handler,
+		Handler: mux,
 	}
 	eventStream()
 	eventWorker()
