@@ -10,11 +10,11 @@ Features:
 * Single binary with no other dependencies *(except Nginx/Openresty)*
 * Written in Go to be blazingly fast and concurrent.
 * All features of Nginx, loadbalancing, websockets, HTTPS, HTTP/2, caching, static file serving, etc.
-* Zero downtime thanks to Nginx fallback mechanism for backend errors.
+* Zero downtime with Nginx fallback mechanism for sick backends and hot config reload.
 * Easy to customize with templating.
 * Statistics via statsd *(successfull/failed updates, timings)*.
 * Real-time updates via Marathon's event stream *(Marathon v0.9.0), no need for callbacks.*
-* Automatic service discovery of all running tasks inside Mesos/Marathon, including health check status.
+* Automatic service discovery of all running tasks inside Mesos/Marathon, including health status.
 * Basic auth support.
 * Health check probe for errors in template or nginx configuration.
 * + more...
