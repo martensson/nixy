@@ -53,10 +53,9 @@ func eventStream() {
 		}
 		ticker := time.NewTicker(1 * time.Second)
 		for _ = range ticker.C {
-			req, err := http.NewRequest("GET", config.Marathon+"/v2/events", nil)
+			req, err := http.NewRequest("GET", endpoint+"/v2/events", nil)
 			if err != nil {
-				errorMsg := "An error occurred while creating request to Marathon events system: %s\n"
-				log.Printf(errorMsg, err)
+				log.Printf("Unable to create event stream request: %s\n", err)
 				continue
 			}
 			req.Header.Set("Accept", "text/event-stream")
@@ -65,25 +64,23 @@ func eventStream() {
 			}
 			resp, err := client.Do(req)
 			if err != nil {
-				errorMsg := "An error occurred while making a request to Marathon events system: %s\n"
-				log.Printf(errorMsg, err)
+				log.Printf("Unable to access Marathon event stream: %s\n", err)
 				continue
 			}
-			defer resp.Body.Close()
 			reader := bufio.NewReader(resp.Body)
 			for {
 				line, err := reader.ReadString('\n')
 				if err != nil {
 					if err != io.EOF {
-						errorMsg := "An error occurred while reading Marathon event: %s\n"
-						log.Printf(errorMsg, err)
+						log.Printf("Error reading Marathon event: %s\n", err)
 					}
+					resp.Body.Close()
 					break
 				}
 				if !strings.HasPrefix(line, "event: ") {
 					continue
 				}
-				log.Println("Marathon event update: " + strings.TrimSpace(line[6:]))
+				log.Printf("Marathon event %s received. Triggering new update.", strings.TrimSpace(line[6:]))
 				select {
 				case eventqueue <- true: // Add reload to our queue channel, unless it is full of course.
 				default:
@@ -91,18 +88,54 @@ func eventStream() {
 				}
 
 			}
+			resp.Body.Close()
 			log.Println("Event stream connection was closed. Re-opening...")
 		}
 	}()
 }
 
-// buffer of two, because we dont really need more.
-var eventqueue = make(chan bool, 2)
+func endpointHealth() {
+	go func() {
+		ticker := time.NewTicker(20 * time.Second)
+		for {
+			select {
+			case <-ticker.C:
+				for _, ep := range config.Marathon {
+					client := &http.Client{
+						Timeout:   5 * time.Second,
+						Transport: tr,
+					}
+					req, err := http.NewRequest("GET", ep+"/ping", nil)
+					if err != nil {
+						log.Printf("An error occurred creating endpoint health request: %s\n", err.Error())
+						continue
+					}
+					if config.User != "" {
+						req.SetBasicAuth(config.User, config.Pass)
+					}
+					resp, err := client.Do(req)
+					if err != nil {
+						log.Printf("Endpoint %s is down: %s\n", ep, err.Error())
+						continue
+					}
+					resp.Body.Close()
+					if resp.StatusCode != 200 {
+						log.Printf("Endpoint %s is down: status code %d\n", ep, resp.StatusCode)
+						continue
+					}
+					endpoint = ep
+					log.Printf("Endpoint %s is active.\n", ep)
+					break // no need to continue now.
+				}
+			}
+		}
+	}()
+}
 
 func eventWorker() {
-	// a ticker channel to limit reloads to marathon, 1s is enough for now.
-	ticker := time.NewTicker(1000 * time.Millisecond)
 	go func() {
+		// a ticker channel to limit reloads to marathon, 1s is enough for now.
+		ticker := time.NewTicker(1 * time.Second)
 		for {
 			select {
 			case <-ticker.C:
@@ -142,7 +175,7 @@ func fetchApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) error {
 	appschn := make(chan error)
 	taskschn := make(chan error)
 	go func() {
-		req, err := http.NewRequest("GET", config.Marathon+"/v2/tasks", nil)
+		req, err := http.NewRequest("GET", endpoint+"/v2/tasks", nil)
 		if err != nil {
 			taskschn <- err
 			return
@@ -166,7 +199,7 @@ func fetchApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) error {
 		taskschn <- nil
 	}()
 	go func() {
-		req, err := http.NewRequest("GET", config.Marathon+"/v2/apps", nil)
+		req, err := http.NewRequest("GET", endpoint+"/v2/apps", nil)
 		if err != nil {
 			appschn <- err
 			return

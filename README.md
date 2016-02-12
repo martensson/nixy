@@ -15,10 +15,10 @@ Nixy is a daemon that automatically configures Nginx for web services deployed o
 * Easy to customize with templating.
 * Statistics via statsd *(successfull/failed updates, timings)*.
 * Real-time updates via Marathon's event stream *(Marathon v0.9.0), no need for callbacks.*
+* Support for Marathon HA cluster, auto detects sick endpoints.
 * Automatic service discovery of all running tasks inside Mesos/Marathon, including health status.
 * Basic auth support.
 * Health check probe for errors in template or nginx configuration.
-* + more...
 
 ## Compatibility
 
@@ -36,7 +36,7 @@ All versions of Marathon >= v0.9.0
     xproxy = "hostname"
     
     # marathon api
-    marathon = "http://localhost:8080"
+    marathon = ["http://example01:8080", "http://example02:8080"] # add all HA cluster nodes in priority order.
     user = "" # leave empty if no auth is required.
     pass = ""
     

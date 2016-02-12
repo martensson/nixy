@@ -25,20 +25,25 @@ type App struct {
 type Config struct {
 	sync.RWMutex
 	Xproxy         string
-	Port           string `json:"-"`
-	Marathon       string `json:"-"`
-	User           string `json:"-"`
-	Pass           string `json:"-"`
-	Nginx_config   string `json:"-"`
-	Nginx_template string `json:"-"`
-	Nginx_cmd      string `json:"-"`
-	Statsd         string `json:"-"`
+	Port           string   `json:"-"`
+	Marathon       []string `json:"-"`
+	User           string   `json:"-"`
+	Pass           string   `json:"-"`
+	Nginx_config   string   `json:"-"`
+	Nginx_template string   `json:"-"`
+	Nginx_cmd      string   `json:"-"`
+	Statsd         string   `json:"-"`
 	Apps           map[string]App
 }
 
+// Global variables
 var VERSION string //added by goxc
 var config Config
 var statsd g2s.Statter
+var endpoint string
+
+// buffer of two, because we dont really need more.
+var eventqueue = make(chan bool, 2)
 
 // Global http transport for connection reuse
 var tr = &http.Transport{}
@@ -119,6 +124,8 @@ func main() {
 		Addr:    ":" + config.Port,
 		Handler: mux,
 	}
+	endpoint = config.Marathon[0] // lets start with the first node.
+	endpointHealth()
 	eventStream()
 	eventWorker()
 	log.Println("Starting nixy on :" + config.Port)

@@ -3,7 +3,7 @@ port = "6000"
 # optional X-Proxy header name
 xproxy = "hostname"
 # marathon api
-marathon = "http://localhost:8080"
+marathon = ["http://example01:8080", "http://example02:8080"] # add all HA cluster nodes in priority order.
 user = "" # leave empty if no auth is required.
 pass = ""
 # nginx
