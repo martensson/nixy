@@ -9,8 +9,8 @@ Nixy is a daemon that automatically configures Nginx for web services deployed o
 * Reverse proxy and load balancer for your microservices running inside Mesos and Marathon
 * Single binary with no other dependencies *(except Nginx/Openresty)*
 * Written in Go to be blazingly fast and concurrent.
-* All features of Nginx:
-    * HTTP/TCP loadbalancing, websockets, SSL/TLS termination, HTTP/2 termination, caching, auth, media streaming, static file serving, etc.
+* All the features you get with Nginx:
+    * HTTP/TCP load balancing, HTTP/2 termination, websockets, SSL/TLS termination, caching/compression, authentication, media streaming, static file serving, etc.
 * Zero downtime with Nginx fallback mechanism for sick backends and hot config reload.
 * Easy to customize with templating.
 * Statistics via statsd *(successfull/failed updates, timings)*.
