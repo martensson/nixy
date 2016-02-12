@@ -25,19 +25,19 @@ type App struct {
 
 type Config struct {
 	sync.RWMutex
-	Port           string
 	Xproxy         string
-	Marathon       string
-	User           string
-	Pass           string
-	Nginx_config   string
-	Nginx_template string
-	Nginx_cmd      string
-	Statsd         string
+	Port           string `json:"-"`
+	Marathon       string `json:"-"`
+	User           string `json:"-"`
+	Pass           string `json:"-"`
+	Nginx_config   string `json:"-"`
+	Nginx_template string `json:"-"`
+	Nginx_cmd      string `json:"-"`
+	Statsd         string `json:"-"`
 	Apps           map[string]App
 }
 
-var VERSION string
+var VERSION string //added by goxc
 var config Config
 var statsd g2s.Statter
 
