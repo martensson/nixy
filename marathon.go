@@ -96,7 +96,7 @@ func eventStream() {
 
 func endpointHealth() {
 	go func() {
-		ticker := time.NewTicker(20 * time.Second)
+		ticker := time.NewTicker(10 * time.Second)
 		for {
 			select {
 			case <-ticker.C:
@@ -123,8 +123,10 @@ func endpointHealth() {
 						log.Printf("Endpoint %s is down: status code %d\n", ep, resp.StatusCode)
 						continue
 					}
-					endpoint = ep
-					log.Printf("Endpoint %s is active.\n", ep)
+					if endpoint != ep {
+						endpoint = ep
+						log.Printf("Endpoint %s is now active.\n", ep)
+					}
 					break // no need to continue now.
 				}
 			}
@@ -278,6 +280,12 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 				} else {
 					re := regexp.MustCompile("[^0-9a-z-]")
 					newapp.Host = re.ReplaceAllLiteralString(app.Id, "")
+				}
+				for k, v := range config.Apps {
+					if newapp.Host == v.Host {
+						log.Printf("%s and %s share same subdomain '%s', ignoring %s.", k, app.Id, v.Host, app.Id)
+						continue
+					}
 				}
 				newapp.Labels = app.Labels
 				newapp.Env = app.Env
