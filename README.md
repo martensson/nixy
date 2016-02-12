@@ -4,12 +4,13 @@ gopher](https://raw.githubusercontent.com/martensson/nixy/master/nixy-gopher.png
 
 Nixy is a daemon that automatically configures Nginx for web services deployed on [Apache Mesos](http://mesos.apache.org) and [Marathon](https://mesosphere.github.io/marathon/). It's an evolution of [moxy](https://github.com/martensson/moxy) but with a greatly improved feature set thanks to the Nginx reverse proxy.
 
-Features:
+**Features:**
 
 * Reverse proxy and load balancer for your microservices running inside Mesos and Marathon
 * Single binary with no other dependencies *(except Nginx/Openresty)*
 * Written in Go to be blazingly fast and concurrent.
-* All features of Nginx, loadbalancing, websockets, HTTPS, HTTP/2, caching, static file serving, etc.
+* All features of Nginx:
+    * HTTP/TCP loadbalancing, websockets, SSL/TLS termination, HTTP/2 termination, caching, auth, media streaming, static file serving, etc.
 * Zero downtime with Nginx fallback mechanism for sick backends and hot config reload.
 * Easy to customize with templating.
 * Statistics via statsd *(successfull/failed updates, timings)*.
