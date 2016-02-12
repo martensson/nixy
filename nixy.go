@@ -17,7 +17,10 @@ import (
 )
 
 type App struct {
-	Tasks []string
+	Tasks  []string
+	Labels map[string]string
+	Env    map[string]string
+	Host   string
 }
 
 type Config struct {
@@ -77,9 +80,9 @@ func nixy_health(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func nixy_apps(w http.ResponseWriter, r *http.Request) {
+func nixy_config(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json; charset=utf-8")
-	b, _ := json.MarshalIndent(config.Apps, "", "  ")
+	b, _ := json.MarshalIndent(config, "", "  ")
 	w.Write(b)
 	return
 }
@@ -113,7 +116,7 @@ func main() {
 	mux := mux.NewRouter()
 	mux.HandleFunc("/", nixy_version)
 	mux.HandleFunc("/v1/reload", nixy_reload)
-	mux.HandleFunc("/v1/apps", nixy_apps)
+	mux.HandleFunc("/v1/config", nixy_config)
 	mux.HandleFunc("/v1/health", nixy_health)
 	mux.HandleFunc("/v1/stats", func(w http.ResponseWriter, req *http.Request) {
 		stats := nixystats.Data()

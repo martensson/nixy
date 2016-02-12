@@ -40,6 +40,7 @@ type MarathonApps struct {
 	Apps []struct {
 		Id           string            `json:"id"`
 		Labels       map[string]string `json:"labels"`
+		Env          map[string]string `json:"env"`
 		HealthChecks []interface{}     `json:"healthChecks"`
 	} `json:"apps"`
 }
@@ -151,11 +152,11 @@ func fetchApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) error {
 			req.SetBasicAuth(config.User, config.Pass)
 		}
 		resp, err := client.Do(req)
-		defer resp.Body.Close()
 		if err != nil {
 			taskschn <- err
 			return
 		}
+		defer resp.Body.Close()
 		decoder := json.NewDecoder(resp.Body)
 		err = decoder.Decode(&jsontasks)
 		if err != nil {
@@ -175,11 +176,11 @@ func fetchApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) error {
 			req.SetBasicAuth(config.User, config.Pass)
 		}
 		resp, err := client.Do(req)
-		defer resp.Body.Close()
 		if err != nil {
 			appschn <- err
 			return
 		}
+		defer resp.Body.Close()
 		decoder := json.NewDecoder(resp.Body)
 		err = decoder.Decode(&jsonapps)
 		if err != nil {
@@ -203,55 +204,56 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 	config.Lock()
 	defer config.Unlock()
 	config.Apps = make(map[string]App)
-	for _, task := range jsontasks.Tasks {
-		// Use regex to remove characters that are not allowed in hostnames
-		re := regexp.MustCompile("[^0-9a-z-]")
-		appid := re.ReplaceAllLiteralString(task.AppId, "")
-		apphealth := false
-		for _, v := range jsonapps.Apps {
-			if v.Id == task.AppId {
-				if s, ok := v.Labels["subdomain"]; ok {
-					appid = s
-				}
-				// this is temporary to support moxy subdomains.
-				if s, ok := v.Labels["moxy_subdomain"]; ok {
-					appid = s
-				}
-				if len(v.HealthChecks) > 0 {
-					apphealth = true
-				}
-			}
-		}
-		// Lets skip tasks that does not expose any ports.
-		if len(task.Ports) == 0 {
-			continue
-		}
-		if apphealth {
-			if len(task.HealthCheckResults) == 0 {
-				// this means tasks is being deployed but not yet monitored as alive. Assume down.
+	for _, app := range jsonapps.Apps {
+		for _, task := range jsontasks.Tasks {
+			if task.AppId != app.Id {
 				continue
 			}
-			alive := true
-			for _, health := range task.HealthCheckResults {
-				// check if health check is alive
-				if health.Alive == false {
-					alive = false
-				}
-			}
-			if alive != true {
-				// at least one health check has failed. Assume down.
+			// Lets skip tasks that does not expose any ports.
+			if len(task.Ports) == 0 {
 				continue
 			}
+			if len(app.HealthChecks) > 0 {
+				if len(task.HealthCheckResults) == 0 {
+					// this means tasks is being deployed but not yet monitored as alive. Assume down.
+					continue
+				}
+				alive := true
+				for _, health := range task.HealthCheckResults {
+					// check if health check is alive
+					if health.Alive == false {
+						alive = false
+					}
+				}
+				if alive != true {
+					// at least one health check has failed. Assume down.
+					continue
+				}
+			}
+			if s, ok := config.Apps[app.Id]; ok {
+				s.Tasks = append(s.Tasks, task.Host+":"+strconv.FormatInt(task.Ports[0], 10))
+				config.Apps[app.Id] = s
+			} else {
+				var newapp = App{}
+				newapp.Tasks = []string{task.Host + ":" + strconv.FormatInt(task.Ports[0], 10)}
+				// Create a valid hostname of app id.
+				if s, ok := app.Labels["subdomain"]; ok {
+					newapp.Host = s
+				} else if s, ok := app.Labels["moxy_subdomain"]; ok {
+					// to be compatible with moxy
+					newapp.Host = s
+				} else {
+					re := regexp.MustCompile("[^0-9a-z-]")
+					newapp.Host = re.ReplaceAllLiteralString(app.Id, "")
+				}
+				newapp.Labels = app.Labels
+				newapp.Env = app.Env
+				config.Apps[app.Id] = newapp
+			}
 		}
-		if s, ok := config.Apps[appid]; ok {
-			s.Tasks = append(s.Tasks, task.Host+":"+strconv.FormatInt(task.Ports[0], 10))
-			config.Apps[appid] = s
-		} else {
-			var s = App{}
-			s.Tasks = []string{task.Host + ":" + strconv.FormatInt(task.Ports[0], 10)}
-			config.Apps[appid] = s
-		}
+
 	}
+
 }
 
 func writeConf() error {

@@ -80,6 +80,6 @@ This will override the application name and replace it with `foobar` as the new 
 
 - `GET /` prints nixy version
 - `GET /v1/stats` for traffic statistics
-- `GET /v1/apps` list apps and running tasks used to generate nginx config
+- `GET /v1/config` list all variables available inside the template
 - `GET /v1/reload` trigger a config regen
 - `GET /v1/health` Responds 200 OK if template AND config is ok, else 500 Server Error with error message.
