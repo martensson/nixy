@@ -26,11 +26,12 @@ http {
             return 503;
         }
     }
-
-{{range $id, $app := .Apps}}
+    {{- range $id, $app := .Apps}}
     upstream {{$app.Host}} {
-        {{ range $app.Tasks}}server {{ . }};
-    {{end}}}
+        {{- range $app.Tasks}}
+        server {{ . }};
+        {{- end}}
+    }
     server {
         listen 7000;
         server_name {{$app.Host}} {{$app.Host}}.*;
@@ -44,5 +45,5 @@ http {
             proxy_pass http://{{$app.Host}};
         }
     }
-{{end}}
+{{- end}}
 }
