@@ -67,7 +67,7 @@ Example to access your apps app1,app2,app3 running inside Mesos and Marathon:
 
 Assuming you have configured nginx on port 80.
 
-### To set custom subdomain for an application
+### To set a custom subdomain for an application
 
 Deploy your app to Marathon setting a custom label called `subdomain`:
 
@@ -75,11 +75,36 @@ Deploy your app to Marathon setting a custom label called `subdomain`:
         "subdomain": "foobar"
     },
 
-This will override the application name and replace it with `foobar` as the new subdomain/host-header.
+This will override the `Host` variable for that app and replace it with `foobar` as the new subdomain/host.
 
-### nixy api
+### Template
+
+Nixy uses the standard Go (Golang) [template package](https://golang.org/pkg/text/template/) to generate its config. It's powerful and easy to use language to fully customize the nginx config. The default template that comes with Nixy is usually enough for most installations and adds some sane defaults for Nginx.
+
+Examples:
+
+**Add some ACL rules to block traffic from outside the internal network? Add a Label called `internal` to your app and the following snippet to your template:**
+```
+{{- if $app.Labels.internal}}
+# allow anyone from local network.
+allow 10.0.0.0/8;
+# block everyone else
+deny all;
+{{- end }}
+```
+
+**Add a custom http header to based on an Environment variable inside your app?**
+```
+{{- if $app.Env.NODE_ENV}}
+add_header X-Environment {{ $app.Env.APP_ENV }} always;
+{{- end}}
+```
+
+If you are unsure of what variables you can use inside your template just do a `GET /v1/config` and you will receive a json of everything available. All labels and environment variables are available.
+
+### Nixy API
 
 - `GET /` prints nixy version
 - `GET /v1/config` list all variables available inside the template
-- `GET /v1/reload` trigger a config regen
-- `GET /v1/health` Responds 200 OK if template AND config is ok, else 500 Server Error with error message.
+- `GET /v1/reload` manually trigger a new config
+- `GET /v1/health` Responds 200 OK if template AND config is OK. Else 500 Server Error with reason.
