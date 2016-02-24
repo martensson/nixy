@@ -103,7 +103,7 @@ deny all;
 {{- end }}
 ```
 
-**Add a custom http header to based on an Environment variable inside your app?**
+**Add a custom http header based on an Environment variable inside your app?**
 ```
 {{- if $app.Env.NODE_ENV}}
 add_header X-Environment {{ $app.Env.APP_ENV }} always;
