@@ -93,7 +93,7 @@ deny all;
 {{- end }}
 ```
 
-**Optionally also add dynamically which network that have access to the same label:**
+**Optionally, add dynamically which network that have access to the same label:**
 ```
 {{- if $app.Labels.internal}}
 # allow anyone from local network.
