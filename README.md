@@ -79,7 +79,7 @@ This will override the `Host` variable for that app and replace it with `foobar`
 
 ### Template
 
-Nixy uses the standard Go (Golang) [template package](https://golang.org/pkg/text/template/) to generate its config. It's powerful and easy to use language to fully customize the nginx config. The default template that comes with Nixy is usually enough for most installations and adds some sane defaults for Nginx.
+Nixy uses the standard Go (Golang) [template package](https://golang.org/pkg/text/template/) to generate its config. It's a powerful and easy to use language to fully customize the nginx config. The default template is usually enough for most installations and adds some sane defaults for Nginx.
 
 Examples:
 
@@ -88,6 +88,16 @@ Examples:
 {{- if $app.Labels.internal}}
 # allow anyone from local network.
 allow 10.0.0.0/8;
+# block everyone else
+deny all;
+{{- end }}
+```
+
+**Optionally also add dynamically which network that have access to the same label:**
+```
+{{- if $app.Labels.internal}}
+# allow anyone from local network.
+allow {{ $app.Labels.internal }};
 # block everyone else
 deny all;
 {{- end }}
