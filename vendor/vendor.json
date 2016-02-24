@@ -1,0 +1,26 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"path": "github.com/BurntSushi/toml",
+			"revision": "a4eecd407cf4129fc902ece859a0114e4cf1a7f4",
+			"revisionTime": "2016-02-23T01:08:35-08:00"
+		},
+		{
+			"path": "github.com/gorilla/context",
+			"revision": "1c83b3eabd45b6d76072b66b746c20815fb2872d",
+			"revisionTime": "2015-08-19T22:12:45-07:00"
+		},
+		{
+			"path": "github.com/gorilla/mux",
+			"revision": "26a6070f849969ba72b72256e9f14cf519751690",
+			"revisionTime": "2015-12-31T08:19:08-08:00"
+		},
+		{
+			"path": "github.com/peterbourgon/g2s",
+			"revision": "ec76db4c1ac16400ac0e17ca9c4840e1d23da5dc",
+			"revisionTime": "2014-09-25T11:41:42-04:00"
+		}
+	]
+}
