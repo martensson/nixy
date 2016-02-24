@@ -79,7 +79,7 @@ This will override the `Host` variable for that app and replace it with `foobar`
 
 ### Template
 
-Nixy uses the standard Go (Golang) [template package](https://golang.org/pkg/text/template/) to generate its config. It's a powerful and easy to use language to fully customize the nginx config. The default template is usually enough for most installations and adds some sane defaults for Nginx.
+Nixy uses the standard Go (Golang) [template package](https://golang.org/pkg/text/template/) to generate its config. It's a powerful and easy to use language to fully customize the nginx config. The default template is meant to be a working base that adds some sane defaults for Nginx. Just extend it or modify to suite your environment the best.
 
 Examples:
 
@@ -106,11 +106,12 @@ deny all;
 **Add a custom http header based on an Environment variable inside your app?**
 ```
 {{- if $app.Env.NODE_ENV}}
+# could be dev, stage, production..
 add_header X-Environment {{ $app.Env.APP_ENV }} always;
 {{- end}}
 ```
 
-If you are unsure of what variables you can use inside your template just do a `GET /v1/config` and you will receive a json of everything available. All labels and environment variables are available.
+If you are unsure of what variables you can use inside your template just do a `GET /v1/config` and you will receive a json response of everything available. All labels and environment variables are available. Other options could be to enable websockets, HTTP/2, SSL/TLS, or to control ports, logging, load balancing method, or any other custom settings your applications need.
 
 ### Nixy API
 
