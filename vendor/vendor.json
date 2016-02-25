@@ -8,6 +8,11 @@
 			"revisionTime": "2016-02-23T01:08:35-08:00"
 		},
 		{
+			"path": "github.com/Sirupsen/logrus",
+			"revision": "219c8cb75c258c552e999735be6df753ffc7afdc",
+			"revisionTime": "2016-02-24T16:10:30-05:00"
+		},
+		{
 			"path": "github.com/gorilla/context",
 			"revision": "1c83b3eabd45b6d76072b66b746c20815fb2872d",
 			"revisionTime": "2015-08-19T22:12:45-07:00"

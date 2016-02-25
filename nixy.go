@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/BurntSushi/toml"
+	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"github.com/peterbourgon/g2s"
 )
@@ -41,6 +42,7 @@ var VERSION string //added by goxc
 var config Config
 var statsd g2s.Statter
 var endpoint string
+var logger = logrus.New()
 
 // buffer of two, because we dont really need more.
 var eventqueue = make(chan bool, 2)
@@ -128,7 +130,7 @@ func main() {
 	endpointHealth()
 	eventStream()
 	eventWorker()
-	log.Println("Starting nixy on :" + config.Port)
+	logger.Info("Starting nixy on :" + config.Port)
 	err = s.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
