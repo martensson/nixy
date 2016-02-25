@@ -105,8 +105,8 @@ deny all;
 
 **Add a custom http header based on an Environment variable inside your app?**
 ```
-{{- if $app.Env.NODE_ENV}}
-# could be dev, stage, production..
+{{- if $app.Env.APP_ENV}}
+# could be dev, stage, production...
 add_header X-Environment {{ $app.Env.APP_ENV }} always;
 {{- end}}
 ```
