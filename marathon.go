@@ -178,7 +178,7 @@ func eventWorker() {
 					}
 				} else {
 					logger.WithFields(logrus.Fields{
-						"time": elapsed,
+						"took": elapsed,
 					}).Info("config updated.")
 					if config.Statsd != "" {
 						go func(elapsed time.Duration) {
