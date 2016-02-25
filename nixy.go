@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"sync"
 
 	"github.com/BurntSushi/toml"
@@ -42,6 +43,7 @@ var VERSION string //added by goxc
 var config Config
 var statsd g2s.Statter
 var endpoint string
+var sick int
 var logger = logrus.New()
 
 // buffer of two, because we dont really need more.
@@ -51,7 +53,9 @@ var eventqueue = make(chan bool, 2)
 var tr = &http.Transport{}
 
 func nixy_reload(w http.ResponseWriter, r *http.Request) {
-	log.Println("Marathon reload triggered")
+	logger.WithFields(logrus.Fields{
+		"client": r.RemoteAddr,
+	}).Info("marathon reload triggered")
 	select {
 	case eventqueue <- true: // Add reload to our queue channel, unless it is full of course.
 		w.WriteHeader(202)
@@ -79,6 +83,12 @@ func nixy_health(w http.ResponseWriter, r *http.Request) {
 		health["Config"] = err.Error()
 	} else {
 		health["Config"] = "OK"
+	}
+	if sick == len(config.Marathon) {
+		w.WriteHeader(500)
+		health["Endpoints"] = "All endpoints are down"
+	} else {
+		health["Endpoints"] = strconv.Itoa(sick) + " SICK"
 	}
 	w.Header().Add("Content-Type", "application/json; charset=utf-8")
 	b, _ := json.MarshalIndent(health, "", "  ")
@@ -108,11 +118,15 @@ func main() {
 	}
 	file, err := ioutil.ReadFile(*configtoml)
 	if err != nil {
-		log.Fatal(err)
+		logger.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Fatal("problem opening toml config")
 	}
 	err = toml.Unmarshal(file, &config)
 	if err != nil {
-		log.Fatal("Problem parsing config: ", err)
+		logger.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Fatal("problem parsing config")
 	}
 	if config.Statsd != "" {
 		statsd, _ = g2s.Dial("udp", config.Statsd)
@@ -130,7 +144,7 @@ func main() {
 	endpointHealth()
 	eventStream()
 	eventWorker()
-	logger.Info("Starting nixy on :" + config.Port)
+	logger.Info("starting nixy on :" + config.Port)
 	err = s.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)

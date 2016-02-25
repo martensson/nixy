@@ -59,7 +59,7 @@ func eventStream() {
 				logger.WithFields(logrus.Fields{
 					"error":    err.Error(),
 					"endpoint": endpoint,
-				}).Error("unable to create event stream request.")
+				}).Error("unable to create event stream request")
 				continue
 			}
 			req.Header.Set("Accept", "text/event-stream")
@@ -71,7 +71,7 @@ func eventStream() {
 				logger.WithFields(logrus.Fields{
 					"error":    err.Error(),
 					"endpoint": endpoint,
-				}).Error("unable to access Marathon event stream.")
+				}).Error("unable to access Marathon event stream")
 				continue
 			}
 			reader := bufio.NewReader(resp.Body)
@@ -82,7 +82,7 @@ func eventStream() {
 						logger.WithFields(logrus.Fields{
 							"error":    err.Error(),
 							"endpoint": endpoint,
-						}).Error("error reading Marathon event stream.")
+						}).Error("error reading Marathon event stream")
 					}
 					resp.Body.Close()
 					break
@@ -93,15 +93,15 @@ func eventStream() {
 				logger.WithFields(logrus.Fields{
 					"event":    strings.TrimSpace(line[6:]),
 					"endpoint": endpoint,
-				}).Info("marathon event received.")
+				}).Info("marathon event received")
 				select {
 				case eventqueue <- true: // Add reload to our queue channel, unless it is full of course.
 				default:
-					logger.Warn("queue is full.")
+					logger.Warn("queue is full")
 				}
 			}
 			resp.Body.Close()
-			logger.Warn("event stream connection was closed. Re-opening...")
+			logger.Warn("event stream connection was closed, re-opening")
 		}
 	}()
 }
@@ -112,6 +112,7 @@ func endpointHealth() {
 		for {
 			select {
 			case <-ticker.C:
+				tmpsick := 0
 				for _, ep := range config.Marathon {
 					client := &http.Client{
 						Timeout:   5 * time.Second,
@@ -122,7 +123,8 @@ func endpointHealth() {
 						logger.WithFields(logrus.Fields{
 							"error":    err.Error(),
 							"endpoint": ep,
-						}).Error("an error occurred creating endpoint health request.")
+						}).Error("an error occurred creating endpoint health request")
+						tmpsick += 1
 						continue
 					}
 					if config.User != "" {
@@ -133,7 +135,8 @@ func endpointHealth() {
 						logger.WithFields(logrus.Fields{
 							"error":    err.Error(),
 							"endpoint": ep,
-						}).Error("endpoint is down.")
+						}).Error("endpoint is down")
+						tmpsick += 1
 						continue
 					}
 					resp.Body.Close()
@@ -141,17 +144,19 @@ func endpointHealth() {
 						logger.WithFields(logrus.Fields{
 							"status":   resp.StatusCode,
 							"endpoint": ep,
-						}).Error("endpoint check failed.")
+						}).Error("endpoint check failed")
+						tmpsick += 1
 						continue
 					}
 					if endpoint != ep {
 						endpoint = ep
 						logger.WithFields(logrus.Fields{
 							"endpoint": ep,
-						}).Info("new endpoint is active.")
+						}).Info("new endpoint is active")
 					}
 					break // no need to continue now.
 				}
+				sick = tmpsick
 			}
 		}
 	}()
@@ -169,7 +174,7 @@ func eventWorker() {
 				err := reload()
 				elapsed := time.Since(start)
 				if err != nil {
-					logger.Error("config update failed.")
+					logger.Error("config update failed")
 					if config.Statsd != "" {
 						go func() {
 							hostname, _ := os.Hostname()
@@ -179,7 +184,7 @@ func eventWorker() {
 				} else {
 					logger.WithFields(logrus.Fields{
 						"took": elapsed,
-					}).Info("config updated.")
+					}).Info("config updated")
 					if config.Statsd != "" {
 						go func(elapsed time.Duration) {
 							hostname, _ := os.Hostname()
@@ -312,7 +317,7 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 						logger.WithFields(logrus.Fields{
 							"app":       app.Id,
 							"subdomain": v.Host,
-						}).Warn("duplicate subdomain label, ignoring app.")
+						}).Warn("duplicate subdomain label, ignoring app")
 						continue OUTER
 					}
 				}
@@ -388,7 +393,7 @@ func reload() error {
 	if err != nil {
 		logger.WithFields(logrus.Fields{
 			"error": err.Error(),
-		}).Error("unable to sync from marathon.")
+		}).Error("unable to sync from marathon")
 		return err
 	}
 	syncApps(&jsontasks, &jsonapps)
@@ -396,14 +401,14 @@ func reload() error {
 	if err != nil {
 		logger.WithFields(logrus.Fields{
 			"error": err.Error(),
-		}).Error("unable to generate nginx config.")
+		}).Error("unable to generate nginx config")
 		return err
 	}
 	err = reloadNginx()
 	if err != nil {
 		logger.WithFields(logrus.Fields{
 			"error": err.Error(),
-		}).Error("unable to reload nginx.")
+		}).Error("unable to reload nginx")
 		return err
 	}
 	return nil

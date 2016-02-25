@@ -115,7 +115,7 @@ If you are unsure of what variables you can use inside your template just do a `
 
 ### Nixy API
 
-- `GET /` prints nixy version
-- `GET /v1/config` list all variables available inside the template
-- `GET /v1/reload` manually trigger a new config
-- `GET /v1/health` Responds 200 OK if template AND config is OK. Else 500 Server Error with reason.
+- `GET /` prints nixy version.
+- `GET /v1/config` list all variables available inside the template.
+- `GET /v1/reload` manually trigger a new config.
+- `GET /v1/health` Responds 200 OK if template, config and endpoints are working. Else 500 Server Error with reason.
