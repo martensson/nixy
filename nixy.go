@@ -21,7 +21,7 @@ type App struct {
 	Tasks  []string
 	Labels map[string]string
 	Env    map[string]string
-	Host   string
+	Hosts  []string
 }
 
 type Config struct {

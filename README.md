@@ -75,7 +75,15 @@ Deploy your app to Marathon setting a custom label called `subdomain`:
         "subdomain": "foobar"
     },
 
-This will override the `Host` variable for that app and replace it with `foobar` as the new subdomain/host.
+This will override the `Host` for that app and replace it with `foobar` as the new subdomain/host.
+
+It's also possible to add multiple subdomains to a single app, dividing by a space character.
+
+    "labels": {
+        "subdomain": "foo bar"
+    },
+
+This will now match both `foo` and `bar` as the new subdomain/host.
 
 ### Template
 

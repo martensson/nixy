@@ -302,23 +302,33 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 			} else {
 				var newapp = App{}
 				newapp.Tasks = []string{task.Host + ":" + strconv.FormatInt(task.Ports[0], 10)}
-				// Create a valid hostname of app id.
 				if s, ok := app.Labels["subdomain"]; ok {
-					newapp.Host = s
+					hosts := strings.Split(s, " ")
+					for _, host := range hosts {
+						newapp.Hosts = append(newapp.Hosts, host)
+					}
 				} else if s, ok := app.Labels["moxy_subdomain"]; ok {
 					// to be compatible with moxy
-					newapp.Host = s
+					hosts := strings.Split(s, " ")
+					for _, host := range hosts {
+						newapp.Hosts = append(newapp.Hosts, host)
+					}
 				} else {
+					// Create a valid hostname of app id.
 					re := regexp.MustCompile("[^0-9a-z-]")
-					newapp.Host = re.ReplaceAllLiteralString(app.Id, "")
+					newapp.Hosts = append(newapp.Hosts, re.ReplaceAllLiteralString(app.Id, ""))
 				}
-				for _, v := range config.Apps {
-					if newapp.Host == v.Host {
-						logger.WithFields(logrus.Fields{
-							"app":       app.Id,
-							"subdomain": v.Host,
-						}).Warn("duplicate subdomain label, ignoring app")
-						continue OUTER
+				for _, confapp := range config.Apps {
+					for _, host := range confapp.Hosts {
+						for _, newhost := range newapp.Hosts {
+							if newhost == host {
+								logger.WithFields(logrus.Fields{
+									"app":       app.Id,
+									"subdomain": host,
+								}).Warn("duplicate subdomain label, ignoring app")
+								continue OUTER
+							}
+						}
 					}
 				}
 				newapp.Labels = app.Labels
