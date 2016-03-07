@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"text/template"
@@ -314,9 +313,9 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 						newapp.Hosts = append(newapp.Hosts, host)
 					}
 				} else {
-					// Create a valid hostname of app id.
-					re := regexp.MustCompile("[^0-9a-z-]")
-					newapp.Hosts = append(newapp.Hosts, re.ReplaceAllLiteralString(app.Id, ""))
+					// return the base name of app id, needed if directories are used.
+					base := filepath.Base(app.Id)
+					newapp.Hosts = append(newapp.Hosts, base)
 				}
 				for _, confapp := range config.Apps {
 					for _, host := range confapp.Hosts {
