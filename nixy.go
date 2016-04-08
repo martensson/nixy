@@ -34,7 +34,7 @@ type Config struct {
 	Nginx_config   string   `json:"-"`
 	Nginx_template string   `json:"-"`
 	Nginx_cmd      string   `json:"-"`
-	Statsd         string   `json:"-"`
+	Statsd         string
 	Apps           map[string]App
 }
 
