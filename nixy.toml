@@ -11,4 +11,7 @@ nginx_config = "/etc/nginx/nginx.conf"
 nginx_template = "/etc/nginx/nginx.tmpl"
 nginx_cmd = "nginx" # optinally openresty
 # statsd settings
-statsd = "localhost:8125" # optional for statistics
+[statsd]
+addr = "localhost:8125" # optional for statistics
+#namespace = "nixy.my_mesos_cluster"
+#sample_rate = 100
