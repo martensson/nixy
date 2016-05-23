@@ -27,15 +27,21 @@ type App struct {
 type Config struct {
 	sync.RWMutex
 	Xproxy         string
-	Port           string   `json:"-"`
-	Marathon       []string `json:"-"`
-	User           string   `json:"-"`
-	Pass           string   `json:"-"`
-	Nginx_config   string   `json:"-"`
-	Nginx_template string   `json:"-"`
-	Nginx_cmd      string   `json:"-"`
-	Statsd         string
+	Port           string       `json:"-"`
+	Marathon       []string     `json:"-"`
+	User           string       `json:"-"`
+	Pass           string       `json:"-"`
+	Nginx_config   string       `json:"-"`
+	Nginx_template string       `json:"-"`
+	Nginx_cmd      string       `json:"-"`
+	Statsd         StatsdConfig `json:"-"`
 	Apps           map[string]App
+}
+
+type StatsdConfig struct {
+	Addr       string
+	Namespace  string
+	SampleRate int `toml:"sample_rate"`
 }
 
 // Global variables
@@ -128,9 +134,9 @@ func main() {
 			"error": err.Error(),
 		}).Fatal("problem parsing config")
 	}
-	if config.Statsd != "" {
-		statsd, _ = g2s.Dial("udp", config.Statsd)
-	}
+
+	statsd, _ = setupStatsd()
+
 	mux := mux.NewRouter()
 	mux.HandleFunc("/", nixy_version)
 	mux.HandleFunc("/v1/reload", nixy_reload)

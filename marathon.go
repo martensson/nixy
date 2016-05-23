@@ -174,23 +174,13 @@ func eventWorker() {
 				elapsed := time.Since(start)
 				if err != nil {
 					logger.Error("config update failed")
-					if config.Statsd != "" {
-						go func() {
-							hostname, _ := os.Hostname()
-							statsd.Counter(1.0, "nixy."+hostname+".reload.failed", 1)
-						}()
-					}
+					go statsCount("reload.failed", 1)
 				} else {
 					logger.WithFields(logrus.Fields{
 						"took": elapsed,
 					}).Info("config updated")
-					if config.Statsd != "" {
-						go func(elapsed time.Duration) {
-							hostname, _ := os.Hostname()
-							statsd.Counter(1.0, "nixy."+hostname+".reload.success", 1)
-							statsd.Timing(1.0, "nixy."+hostname+".reload.time", elapsed)
-						}(elapsed)
-					}
+					go statsCount("reload.success", 1)
+					go statsTiming("reload.time", elapsed)
 				}
 			}
 		}
