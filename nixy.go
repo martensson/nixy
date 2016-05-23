@@ -27,14 +27,14 @@ type App struct {
 type Config struct {
 	sync.RWMutex
 	Xproxy         string
-	Port           string       `json:"-"`
-	Marathon       []string     `json:"-"`
-	User           string       `json:"-"`
-	Pass           string       `json:"-"`
-	Nginx_config   string       `json:"-"`
-	Nginx_template string       `json:"-"`
-	Nginx_cmd      string       `json:"-"`
-	Statsd         StatsdConfig `json:"-"`
+	Port           string   `json:"-"`
+	Marathon       []string `json:"-"`
+	User           string   `json:"-"`
+	Pass           string   `json:"-"`
+	Nginx_config   string   `json:"-"`
+	Nginx_template string   `json:"-"`
+	Nginx_cmd      string   `json:"-"`
+	Statsd         StatsdConfig
 	Apps           map[string]App
 }
 
