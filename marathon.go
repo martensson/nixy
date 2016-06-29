@@ -327,6 +327,7 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 		}
 
 	}
+	config.LastUpdate = time.Now()
 
 }
 
