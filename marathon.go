@@ -48,7 +48,7 @@ type MarathonApps struct {
 func eventStream() {
 	go func() {
 		client := &http.Client{
-			Timeout:   10 * time.Second,
+			Timeout:   0 * time.Second,
 			Transport: tr,
 		}
 		ticker := time.NewTicker(1 * time.Second)
