@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/Sirupsen/logrus"
@@ -35,7 +36,14 @@ type Config struct {
 	Nginx_template string   `json:"-"`
 	Nginx_cmd      string   `json:"-"`
 	Statsd         StatsdConfig
+	LastUpdates    Updates
 	Apps           map[string]App
+}
+
+type Updates struct {
+	LastSync        time.Time
+	LastConfigWrite time.Time
+	LastNginxReload time.Time
 }
 
 type StatsdConfig struct {

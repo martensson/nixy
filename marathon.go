@@ -325,9 +325,7 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 				config.Apps[app.Id] = newapp
 			}
 		}
-
 	}
-
 }
 
 func writeConf() error {
@@ -396,6 +394,7 @@ func reload() error {
 		return err
 	}
 	syncApps(&jsontasks, &jsonapps)
+	config.LastUpdates.LastSync = time.Now()
 	err = writeConf()
 	if err != nil {
 		logger.WithFields(logrus.Fields{
@@ -403,6 +402,7 @@ func reload() error {
 		}).Error("unable to generate nginx config")
 		return err
 	}
+	config.LastUpdates.LastConfigWrite = time.Now()
 	err = reloadNginx()
 	if err != nil {
 		logger.WithFields(logrus.Fields{
@@ -410,5 +410,6 @@ func reload() error {
 		}).Error("unable to reload nginx")
 		return err
 	}
+	config.LastUpdates.LastNginxReload = time.Now()
 	return nil
 }
