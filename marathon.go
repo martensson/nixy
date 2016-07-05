@@ -66,7 +66,7 @@ func eventStream() {
 				req.SetBasicAuth(config.User, config.Pass)
 			}
 			cancel := make(chan struct{})
-			// initial request cancellation timer of 20s
+			// initial request cancellation timer of 15s
 			timer := time.AfterFunc(15 * time.Second, func() {
 				close(cancel)
 				logger.Warn("event stream request was cancelled")
