@@ -65,16 +65,28 @@ func eventStream() {
 			if config.User != "" {
 				req.SetBasicAuth(config.User, config.Pass)
 			}
+			cancel := make(chan struct{})
+			// initial request cancellation timer of 15s
+			timer := time.AfterFunc(15 * time.Second, func() {
+				close(cancel)
+				logger.Warn("event stream request was cancelled")
+			})
+			req.Cancel = cancel
 			resp, err := client.Do(req)
 			if err != nil {
 				logger.WithFields(logrus.Fields{
 					"error":    err.Error(),
 					"endpoint": endpoint,
 				}).Error("unable to access Marathon event stream")
+				// expire request cancellation timer immediately
+				timer.Reset(100 * time.Millisecond)
 				continue
 			}
 			reader := bufio.NewReader(resp.Body)
 			for {
+				// reset request cancellation timer to 15s (should be >10s to avoid unnecessary reconnects
+				// since ~10s seems to be the rate for dummy/keepalive events on the marathon event stream
+				timer.Reset(15 * time.Second)
 				line, err := reader.ReadString('\n')
 				if err != nil {
 					if err != io.EOF {
