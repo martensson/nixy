@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -53,6 +52,17 @@ func eventStream() {
 		}
 		ticker := time.NewTicker(1 * time.Second)
 		for _ = range ticker.C {
+			var endpoint string
+			for _, es := range health.Endpoints {
+				if es.Healthy == true {
+					endpoint = es.Endpoint
+					break
+				}
+			}
+			if endpoint == "" {
+				logger.Error("all endpoints are down")
+				continue
+			}
 			req, err := http.NewRequest("GET", endpoint+"/v2/events", nil)
 			if err != nil {
 				logger.WithFields(logrus.Fields{
@@ -67,7 +77,7 @@ func eventStream() {
 			}
 			cancel := make(chan struct{})
 			// initial request cancellation timer of 15s
-			timer := time.AfterFunc(15 * time.Second, func() {
+			timer := time.AfterFunc(15*time.Second, func() {
 				close(cancel)
 				logger.Warn("event stream request was cancelled")
 			})
@@ -89,12 +99,10 @@ func eventStream() {
 				timer.Reset(15 * time.Second)
 				line, err := reader.ReadString('\n')
 				if err != nil {
-					if err != io.EOF {
-						logger.WithFields(logrus.Fields{
-							"error":    err.Error(),
-							"endpoint": endpoint,
-						}).Error("error reading Marathon event stream")
-					}
+					logger.WithFields(logrus.Fields{
+						"error":    err.Error(),
+						"endpoint": endpoint,
+					}).Error("error reading Marathon event stream")
 					resp.Body.Close()
 					break
 				}
@@ -123,19 +131,19 @@ func endpointHealth() {
 		for {
 			select {
 			case <-ticker.C:
-				tmpsick := 0
-				for _, ep := range config.Marathon {
+				for i, es := range health.Endpoints {
 					client := &http.Client{
 						Timeout:   5 * time.Second,
 						Transport: tr,
 					}
-					req, err := http.NewRequest("GET", ep+"/ping", nil)
+					req, err := http.NewRequest("GET", es.Endpoint+"/ping", nil)
 					if err != nil {
 						logger.WithFields(logrus.Fields{
 							"error":    err.Error(),
-							"endpoint": ep,
+							"endpoint": es.Endpoint,
 						}).Error("an error occurred creating endpoint health request")
-						tmpsick += 1
+						health.Endpoints[i].Healthy = false
+						health.Endpoints[i].Message = err.Error()
 						continue
 					}
 					if config.User != "" {
@@ -145,29 +153,34 @@ func endpointHealth() {
 					if err != nil {
 						logger.WithFields(logrus.Fields{
 							"error":    err.Error(),
-							"endpoint": ep,
+							"endpoint": es.Endpoint,
 						}).Error("endpoint is down")
-						tmpsick += 1
+						health.Endpoints[i].Healthy = false
+						health.Endpoints[i].Message = err.Error()
 						continue
 					}
 					resp.Body.Close()
 					if resp.StatusCode != 200 {
 						logger.WithFields(logrus.Fields{
 							"status":   resp.StatusCode,
-							"endpoint": ep,
+							"endpoint": es.Endpoint,
 						}).Error("endpoint check failed")
-						tmpsick += 1
+						health.Endpoints[i].Healthy = false
+						health.Endpoints[i].Message = resp.Status
 						continue
 					}
-					if endpoint != ep {
-						endpoint = ep
-						logger.WithFields(logrus.Fields{
-							"endpoint": ep,
-						}).Info("new endpoint is active")
-					}
-					break // no need to continue now.
+					health.Endpoints[i].Healthy = true
+					health.Endpoints[i].Message = "OK"
+					/*
+						if endpoint != ep {
+							endpoint = ep
+							logger.WithFields(logrus.Fields{
+								"endpoint": ep,
+							}).Info("new endpoint is active")
+						}
+						break // no need to continue now.
+					*/
 				}
-				sick = tmpsick
 			}
 		}
 	}()
@@ -200,6 +213,17 @@ func eventWorker() {
 }
 
 func fetchApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) error {
+	var endpoint string
+	for _, es := range health.Endpoints {
+		if es.Healthy == true {
+			endpoint = es.Endpoint
+			break
+		}
+	}
+	if endpoint == "" {
+		err := errors.New("all endpoints are down")
+		return err
+	}
 	client := &http.Client{
 		Timeout:   5 * time.Second,
 		Transport: tr,

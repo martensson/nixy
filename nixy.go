@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"sync"
 	"time"
 
@@ -52,12 +51,28 @@ type StatsdConfig struct {
 	SampleRate int `toml:"sample_rate"`
 }
 
+type Status struct {
+	Healthy bool
+	Message string
+}
+
+type EndpointStatus struct {
+	Endpoint string
+	Healthy  bool
+	Message  string
+}
+
+type Health struct {
+	Config    Status
+	Template  Status
+	Endpoints []EndpointStatus
+}
+
 // Global variables
 var VERSION string //added by goxc
 var config Config
 var statsd g2s.Statter
-var endpoint string
-var sick int
+var health *Health
 var logger = logrus.New()
 
 // buffer of two, because we dont really need more.
@@ -65,6 +80,18 @@ var eventqueue = make(chan bool, 2)
 
 // Global http transport for connection reuse
 var tr = &http.Transport{}
+
+func NewHealth() *Health {
+	var h Health
+	for _, ep := range config.Marathon {
+		var s EndpointStatus
+		s.Endpoint = ep
+		s.Healthy = true
+		s.Message = "OK"
+		h.Endpoints = append(h.Endpoints, s)
+	}
+	return &h
+}
 
 func nixy_reload(w http.ResponseWriter, r *http.Request) {
 	logger.WithFields(logrus.Fields{
@@ -83,26 +110,21 @@ func nixy_reload(w http.ResponseWriter, r *http.Request) {
 }
 
 func nixy_health(w http.ResponseWriter, r *http.Request) {
-	health := make(map[string]string)
 	err := checkTmpl()
 	if err != nil {
-		w.WriteHeader(500)
-		health["Template"] = err.Error()
+		health.Template.Message = err.Error()
+		health.Template.Healthy = false
 	} else {
-		health["Template"] = "OK"
+		health.Template.Message = "OK"
+		health.Template.Healthy = true
 	}
 	err = checkConf()
 	if err != nil {
-		w.WriteHeader(500)
-		health["Config"] = err.Error()
+		health.Config.Message = err.Error()
+		health.Config.Healthy = false
 	} else {
-		health["Config"] = "OK"
-	}
-	if sick == len(config.Marathon) {
-		w.WriteHeader(500)
-		health["Endpoints"] = "All endpoints are down"
-	} else {
-		health["Endpoints"] = strconv.Itoa(sick) + " SICK"
+		health.Config.Message = "OK"
+		health.Config.Healthy = true
 	}
 	w.Header().Add("Content-Type", "application/json; charset=utf-8")
 	b, _ := json.MarshalIndent(health, "", "  ")
@@ -154,7 +176,7 @@ func main() {
 		Addr:    ":" + config.Port,
 		Handler: mux,
 	}
-	endpoint = config.Marathon[0] // lets start with the first node.
+	health = NewHealth()
 	endpointHealth()
 	eventStream()
 	eventWorker()
