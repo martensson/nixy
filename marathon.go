@@ -114,7 +114,7 @@ func eventStream() {
 					"endpoint": endpoint,
 				}).Info("marathon event received")
 				select {
-				case eventqueue <- true: // Add reload to our queue channel, unless it is full of course.
+				case eventqueue <- true: // add reload to our queue channel, unless it is full of course.
 				default:
 					logger.Warn("queue is full")
 				}
@@ -171,15 +171,6 @@ func endpointHealth() {
 					}
 					health.Endpoints[i].Healthy = true
 					health.Endpoints[i].Message = "OK"
-					/*
-						if endpoint != ep {
-							endpoint = ep
-							logger.WithFields(logrus.Fields{
-								"endpoint": ep,
-							}).Info("new endpoint is active")
-						}
-						break // no need to continue now.
-					*/
 				}
 			}
 		}
@@ -300,7 +291,7 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 			if task.AppId != app.Id {
 				continue
 			}
-			// Lets skip tasks that does not expose any ports.
+			// lets skip tasks that does not expose any ports.
 			if len(task.Ports) == 0 {
 				continue
 			}

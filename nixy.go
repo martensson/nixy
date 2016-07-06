@@ -72,16 +72,16 @@ type Health struct {
 var VERSION string //added by goxc
 var config Config
 var statsd g2s.Statter
-var health *Health
+var health Health
 var logger = logrus.New()
 
-// buffer of two, because we dont really need more.
+// Eventqueue with buffer of two, because we dont really need more.
 var eventqueue = make(chan bool, 2)
 
 // Global http transport for connection reuse
 var tr = &http.Transport{}
 
-func NewHealth() *Health {
+func newHealth() Health {
 	var h Health
 	for _, ep := range config.Marathon {
 		var s EndpointStatus
@@ -90,7 +90,7 @@ func NewHealth() *Health {
 		s.Message = "OK"
 		h.Endpoints = append(h.Endpoints, s)
 	}
-	return &h
+	return h
 }
 
 func nixy_reload(w http.ResponseWriter, r *http.Request) {
@@ -176,7 +176,7 @@ func main() {
 		Addr:    ":" + config.Port,
 		Handler: mux,
 	}
-	health = NewHealth()
+	health = newHealth()
 	endpointHealth()
 	eventStream()
 	eventWorker()
