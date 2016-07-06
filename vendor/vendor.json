@@ -3,29 +3,40 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "UJTpOZ5IuuyoWFrS42uw/167mn0=",
+			"origin": "github.com/martensson/nixy/vendor/github.com/BurntSushi/toml",
 			"path": "github.com/BurntSushi/toml",
-			"revision": "bbd5bb678321a0d6e58f1099321dfa73391c1b6f",
-			"revisionTime": "2016-03-08T18:19:12-08:00"
+			"revision": "f0aeabca5a127c4078abb8c8d64298b147264b55",
+			"revisionTime": "2016-04-26T10:16:13Z"
 		},
 		{
+			"checksumSHA1": "htjvdG/znrHmFYRQBqA2vHrJsF4=",
+			"origin": "github.com/martensson/nixy/vendor/github.com/Sirupsen/logrus",
 			"path": "github.com/Sirupsen/logrus",
-			"revision": "4b6ea7319e214d98c938f12692336f7ca9348d6b",
-			"revisionTime": "2016-03-17T14:11:10Z"
+			"revision": "f3cfb454f4c209e6668c95216c4744b8fddb2356",
+			"revisionTime": "2016-06-01T11:32:10Z"
 		},
 		{
+			"checksumSHA1": "iIUYZyoanCQQTUaWsu8b+iOSPt4=",
+			"origin": "github.com/martensson/nixy/vendor/github.com/gorilla/context",
 			"path": "github.com/gorilla/context",
-			"revision": "1ea25387ff6f684839d82767c1733ff4d4d15d0a",
-			"revisionTime": "2016-02-26T13:46:23-08:00"
+			"revision": "aed02d124ae4a0e94fea4541c8effd05bf0c8296",
+			"revisionTime": "2016-05-25T20:33:19Z"
 		},
 		{
+			"checksumSHA1": "H5f7qNqZl8N83s9cyC7Q1eWgAtI=",
+			"origin": "github.com/martensson/nixy/vendor/github.com/gorilla/mux",
 			"path": "github.com/gorilla/mux",
-			"revision": "0eeaf8392f5b04950925b8a69fe70f110fa7cbfc",
-			"revisionTime": "2016-03-17T14:34:30-07:00"
+			"revision": "9fa818a44c2bf1396a17f9d5a3c0f6dd39d2ff8e",
+			"revisionTime": "2016-06-05T23:35:21Z"
 		},
 		{
+			"checksumSHA1": "98pC93jy7+oik3tlde3hVAoh3SE=",
+			"origin": "github.com/martensson/nixy/vendor/github.com/peterbourgon/g2s",
 			"path": "github.com/peterbourgon/g2s",
 			"revision": "ec76db4c1ac16400ac0e17ca9c4840e1d23da5dc",
-			"revisionTime": "2014-09-25T11:41:42-04:00"
+			"revisionTime": "2014-09-25T15:41:42Z"
 		}
-	]
+	],
+	"rootPath": "github.com/martensson/nixy"
 }
