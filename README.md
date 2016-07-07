@@ -11,9 +11,9 @@ Nixy is a daemon that automatically configures Nginx for web services deployed o
 * Written in Go to be blazingly fast and concurrent.
 * All the features you get with Nginx:
     * HTTP/TCP load balancing, HTTP/2 termination, websockets, SSL/TLS termination, caching/compression, authentication, media streaming, static file serving, etc.
-* Zero downtime with Nginx fallback mechanism for sick backends and hot config reload.
+* Zero downtime with Nginx fall-back mechanism for sick backends and hot config reload.
 * Easy to customize with templating.
-* Statistics via statsd *(successfull/failed updates, timings)*.
+* Statistics via statsd *(successful/failed updates, timings)*.
 * Real-time updates via Marathon's event stream *(Marathon v0.9.0), no need for callbacks.*
 * Support for Marathon HA cluster, auto detects sick endpoints.
 * Automatic service discovery of all running tasks inside Mesos/Marathon, including health status.
@@ -41,7 +41,7 @@ All versions of Marathon >= v0.9.0
     # nginx
     nginx_config = "/etc/nginx/nginx.conf"
     nginx_template = "/etc/nginx/nginx.tmpl"
-    nginx_cmd = "nginx" # optinally openresty
+    nginx_cmd = "nginx" # optionally openresty
     # statsd settings
     [statsd]
     addr = "localhost:8125" # optional for statistics
@@ -88,7 +88,7 @@ This will now match both `foo` and `bar` as the new subdomain/host.
 
 ### Template
 
-Nixy uses the standard Go (Golang) [template package](https://golang.org/pkg/text/template/) to generate its config. It's a powerful and easy to use language to fully customize the nginx config. The default template is meant to be a working base that adds some sane defaults for Nginx. Just extend it or modify to suite your environment the best.
+Nixy uses the standard Go (Golang) [template package](https://golang.org/pkg/text/template/) to generate its config. It's a powerful and easy to use language to fully customize the nginx config. The default template is meant to be a working base that adds some sane defaults for Nginx. If needed just extend it or modify to suite your environment the best.
 
 Examples:
 
@@ -120,7 +120,7 @@ add_header X-Environment {{ $app.Env.APP_ENV }} always;
 {{- end}}
 ```
 
-If you are unsure of what variables you can use inside your template just do a `GET /v1/config` and you will receive a json response of everything available. All labels and environment variables are available. Other options could be to enable websockets, HTTP/2, SSL/TLS, or to control ports, logging, load balancing method, or any other custom settings your applications need.
+If you are unsure of what variables you can use inside your template just do a `GET /v1/config` and you will receive a JSON response of everything available. All labels and environment variables are available. Other options could be to enable websockets, HTTP/2, SSL/TLS, or to control ports, logging, load balancing method, or any other custom settings your applications need.
 
 ### Nixy API
 

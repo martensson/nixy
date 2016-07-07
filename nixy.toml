@@ -9,7 +9,7 @@ pass = ""
 # nginx
 nginx_config = "/etc/nginx/nginx.conf"
 nginx_template = "/etc/nginx/nginx.tmpl"
-nginx_cmd = "nginx" # optinally openresty
+nginx_cmd = "nginx" # optionally openresty
 # statsd settings
 [statsd]
 addr = "localhost:8125" # optional for statistics
