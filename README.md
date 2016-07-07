@@ -31,22 +31,21 @@ All versions of Marathon >= v0.9.0
     ``` toml
     # nixy listening port
     port = "6000"
-
     # optional X-Proxy header name
     xproxy = "hostname"
-    
     # marathon api
     marathon = ["http://example01:8080", "http://example02:8080"] # add all HA cluster nodes in priority order.
     user = "" # leave empty if no auth is required.
     pass = ""
-    
     # nginx
     nginx_config = "/etc/nginx/nginx.conf"
     nginx_template = "/etc/nginx/nginx.tmpl"
     nginx_cmd = "nginx" # optinally openresty
-    
     # statsd settings
-    statsd = "localhost:8125" # optional for statistics
+    [statsd]
+    addr = "localhost:8125" # optional for statistics
+    #namespace = "nixy.my_mesos_cluster"
+    #sample_rate = 100
     ```
 3. Optionally edit the nginx template *(default on ubuntu is /etc/nginx/nginx.tmpl)*
 4. Install [nginx](http://nginx.org/en/download.html) or [openresty](https://openresty.org/) and start the service.
@@ -124,6 +123,10 @@ If you are unsure of what variables you can use inside your template just do a `
 ### Nixy API
 
 - `GET /` prints nixy version.
-- `GET /v1/config` list all variables available inside the template.
-- `GET /v1/reload` manually trigger a new config.
-- `GET /v1/health` Responds 200 OK if template, config and endpoints are working. Else 500 Server Error with reason.
+- `GET /v1/config` JSON response with all variables available inside the template.
+- `GET /v1/reload` manually trigger a new config reload.
+- `GET /v1/health` JSON response with health status of template, nginx config and Marathon endpoints available.
+
+### Nagios Monitoring
+
+In case you want to monitor nixy using Nagios (or compatible monitoring) you can use the included `check_nixy` plugin.
