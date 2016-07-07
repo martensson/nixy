@@ -28,6 +28,7 @@ All versions of Marathon >= v0.9.0
 
 1. Install nixy from pre-compiled packages. Check `releases` page.
 2. Edit config *(default on ubuntu is /etc/nixy.toml)*:
+
     ``` toml
     # nixy listening port
     port = "6000"
@@ -47,6 +48,7 @@ All versions of Marathon >= v0.9.0
     #namespace = "nixy.my_mesos_cluster"
     #sample_rate = 100
     ```
+
 3. Optionally edit the nginx template *(default on ubuntu is /etc/nginx/nginx.tmpl)*
 4. Install [nginx](http://nginx.org/en/download.html) or [openresty](https://openresty.org/) and start the service.
 5. Start nixy! *(service nixy start)*
