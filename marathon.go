@@ -77,8 +77,11 @@ func eventStream() {
 			}
 			cancel := make(chan struct{})
 			// initial request cancellation timer of 15s
-			timer := time.AfterFunc(15*time.Second, func() {
-				close(cancel)
+			timer := time.AfterFunc(15 * time.Second, func() {
+				defer func() {
+					recover()
+				}()
+				defer close(cancel)
 				logger.Warn("event stream request was cancelled")
 			})
 			req.Cancel = cancel
