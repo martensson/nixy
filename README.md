@@ -2,27 +2,29 @@
 ![nginx
 gopher](https://raw.githubusercontent.com/martensson/nixy/master/nixy-gopher.png)
 
-Nixy is a daemon that automatically configures Nginx for web services deployed on [Apache Mesos](http://mesos.apache.org) and [Marathon](https://mesosphere.github.io/marathon/). It's an evolution of [moxy](https://github.com/martensson/moxy) but with a greatly improved feature set thanks to the Nginx reverse proxy.
+Nixy is a daemon that automatically configures Nginx for web services deployed on [Apache Mesos](http://mesos.apache.org) and [Marathon](https://mesosphere.github.io/marathon/).
 
 **Features:**
 
 * Reverse proxy and load balancer for your microservices running inside Mesos and Marathon
 * Single binary with no other dependencies *(except Nginx/Openresty)*
 * Written in Go to be blazingly fast and concurrent.
-* All the features you get with Nginx:
+* All the features you would expect from Nginx:
     * HTTP/TCP load balancing, HTTP/2 termination, websockets, SSL/TLS termination, caching/compression, authentication, media streaming, static file serving, etc.
 * Zero downtime with Nginx fall-back mechanism for sick backends and hot config reload.
-* Easy to customize with templating.
+* Easy to customize your needs with templating.
 * Statistics via statsd *(successful/failed updates, timings)*.
-* Real-time updates via Marathon's event stream *(Marathon v0.9.0), no need for callbacks.*
+* Real-time updates via Marathon's event stream *(Marathon v0.9.0), so no need for callbacks.*
 * Support for Marathon HA cluster, auto detects sick endpoints.
-* Automatic service discovery of all running tasks inside Mesos/Marathon, including health status.
+* Automatic service discovery of all running tasks inside Mesos/Marathon, including their health status.
 * Basic auth support.
-* Health check probe for errors in template or nginx configuration.
+* Health checks for errors in template, nginx config or Marathon endpoints.
+* ....
 
 ## Compatibility
 
 All versions of Marathon >= v0.9.0
+All versions of Nginx. Also compatible with [OpenResty](http://openresty.org/en/).
 
 ## Getting started
 

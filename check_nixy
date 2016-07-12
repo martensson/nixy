@@ -25,8 +25,8 @@ for endpoint in health['Endpoints']:
     if not endpoint['Healthy']:
         sick += 1
 if sick > 0 and sick < total:
-    print "NIXY WARNING - %s/%s Marathon endpoints are down" \
-        % (sick, total)
+    print "NIXY WARNING - %s/%s Marathon endpoints are down. Check %s for details." \
+        % (sick, total, args.url)
     sys.exit(1)
 elif sick == total:
     print "NIXY CRITICAL - All Marathon endpoints are down"
