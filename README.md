@@ -23,8 +23,8 @@ Nixy is a daemon that automatically configures Nginx for web services deployed o
 
 ## Compatibility
 
-All versions of Marathon >= v0.9.0
-All versions of Nginx. Also compatible with [OpenResty](http://openresty.org/en/).
+- All versions of Marathon >= v0.9.0
+- All versions of Nginx. Also compatible with [OpenResty](http://openresty.org/en/).
 
 ## Getting started
 
