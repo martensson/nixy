@@ -8,8 +8,17 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-u', '--url', required=True, help="Nixy Health API URL")
 args = parser.parse_args()
 
-resp = urllib2.urlopen(args.url)
-health = json.loads(resp.read())
+try:
+    resp = urllib2.urlopen(args.url)
+except urllib2.URLError, e:
+    print "NIXY CRITICAL - %s" % e
+    sys.exit(2)
+
+try:
+    health = json.loads(resp.read())
+except ValueError, e:
+    print "NIXY CRITICAL - %s" % e
+    sys.exit(2)
 
 if not health['Config']['Healthy']:
     print "NIXY CRITICAL - %s" % health['Config']['Message']
