@@ -77,7 +77,7 @@ func eventStream() {
 			}
 			cancel := make(chan struct{})
 			// initial request cancellation timer of 15s
-			timer := time.AfterFunc(15 * time.Second, func() {
+			timer := time.AfterFunc(15*time.Second, func() {
 				defer func() {
 					recover()
 				}()
@@ -333,9 +333,11 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 						newapp.Hosts = append(newapp.Hosts, host)
 					}
 				} else {
-					// return the base name of app id, needed if directories are used.
-					base := filepath.Base(app.Id)
-					newapp.Hosts = append(newapp.Hosts, base)
+					// Return app id where '/' are replaced with '.'.
+					// Needed if directories are used.
+					fields := strings.FieldsFunc(app.Id,
+						func(c rune) bool { return c == '/' })
+					newapp.Hosts = append(newapp.Hosts, strings.Join(fields, "."))
 				}
 				for _, confapp := range config.Apps {
 					for _, host := range confapp.Hosts {
