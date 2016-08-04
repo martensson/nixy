@@ -118,7 +118,7 @@ func nixy_health(w http.ResponseWriter, r *http.Request) {
 		health.Template.Message = "OK"
 		health.Template.Healthy = true
 	}
-	err = checkConf()
+	err = checkConf(config.Nginx_config)
 	if err != nil {
 		health.Config.Message = err.Error()
 		health.Config.Healthy = false
