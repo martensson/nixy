@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -37,10 +36,15 @@ type MarathonTasks struct {
 
 type MarathonApps struct {
 	Apps []struct {
-		Id           string            `json:"id"`
-		Labels       map[string]string `json:"labels"`
-		Env          map[string]string `json:"env"`
-		HealthChecks []interface{}     `json:"healthChecks"`
+		Id              string            `json:"id"`
+		Labels          map[string]string `json:"labels"`
+		Env             map[string]string `json:"env"`
+		HealthChecks    []interface{}     `json:"healthChecks"`
+		PortDefinitions []struct {
+			Port     int64             `json:"port"`
+			Protocol string            `json:"protocol"`
+			Labels   map[string]string `json:"labels"`
+		} `json:"portDefinitions"`
 	} `json:"apps"`
 }
 
@@ -316,11 +320,25 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 				}
 			}
 			if s, ok := config.Apps[app.Id]; ok {
-				s.Tasks = append(s.Tasks, task.Host+":"+strconv.FormatInt(task.Ports[0], 10))
+				var newtask = Task{}
+				newtask.Host = task.Host
+				newtask.Ports = task.Ports
+				newtask.ServicePorts = task.ServicePorts
+				newtask.StagedAt = task.StagedAt
+				newtask.StartedAt = task.StartedAt
+				newtask.Version = task.Version
+				s.Tasks = append(s.Tasks, newtask)
 				config.Apps[app.Id] = s
 			} else {
 				var newapp = App{}
-				newapp.Tasks = []string{task.Host + ":" + strconv.FormatInt(task.Ports[0], 10)}
+				var newtask = Task{}
+				newtask.Host = task.Host
+				newtask.Ports = task.Ports
+				newtask.ServicePorts = task.ServicePorts
+				newtask.StagedAt = task.StagedAt
+				newtask.StartedAt = task.StartedAt
+				newtask.Version = task.Version
+				newapp.Tasks = append(s.Tasks, newtask)
 				if s, ok := app.Labels["subdomain"]; ok {
 					hosts := strings.Split(s, " ")
 					for _, host := range hosts {
@@ -354,6 +372,14 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 				}
 				newapp.Labels = app.Labels
 				newapp.Env = app.Env
+				for _, pds := range app.PortDefinitions {
+					pd := PortDefinitions{
+						Port:     pds.Port,
+						Protocol: pds.Protocol,
+						Labels:   pds.Labels,
+					}
+					newapp.PortDefinitions = append(newapp.PortDefinitions, pd)
+				}
 				config.Apps[app.Id] = newapp
 			}
 		}

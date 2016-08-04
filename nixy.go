@@ -17,11 +17,27 @@ import (
 	"github.com/peterbourgon/g2s"
 )
 
+type Task struct {
+	Host         string
+	Ports        []int64
+	ServicePorts []int64
+	StagedAt     string
+	StartedAt    string
+	Version      string
+}
+
+type PortDefinitions struct {
+	Port     int64
+	Protocol string
+	Labels   map[string]string
+}
+
 type App struct {
-	Tasks  []string
-	Labels map[string]string
-	Env    map[string]string
-	Hosts  []string
+	Tasks           []Task
+	Labels          map[string]string
+	Env             map[string]string
+	Hosts           []string
+	PortDefinitions []PortDefinitions
 }
 
 type Config struct {
