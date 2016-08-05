@@ -319,26 +319,8 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 					continue
 				}
 			}
-			if s, ok := config.Apps[app.Id]; ok {
-				var newtask = Task{}
-				newtask.Host = task.Host
-				newtask.Ports = task.Ports
-				newtask.ServicePorts = task.ServicePorts
-				newtask.StagedAt = task.StagedAt
-				newtask.StartedAt = task.StartedAt
-				newtask.Version = task.Version
-				s.Tasks = append(s.Tasks, newtask)
-				config.Apps[app.Id] = s
-			} else {
+			if _, ok := config.Apps[app.Id]; !ok {
 				var newapp = App{}
-				var newtask = Task{}
-				newtask.Host = task.Host
-				newtask.Ports = task.Ports
-				newtask.ServicePorts = task.ServicePorts
-				newtask.StagedAt = task.StagedAt
-				newtask.StartedAt = task.StartedAt
-				newtask.Version = task.Version
-				newapp.Tasks = append(s.Tasks, newtask)
 				if s, ok := app.Labels["subdomain"]; ok {
 					hosts := strings.Split(s, " ")
 					for _, host := range hosts {
@@ -382,6 +364,16 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 				}
 				config.Apps[app.Id] = newapp
 			}
+			newapp := config.Apps[app.Id]
+			var newtask = Task{}
+			newtask.Host = task.Host
+			newtask.Ports = task.Ports
+			newtask.ServicePorts = task.ServicePorts
+			newtask.StagedAt = task.StagedAt
+			newtask.StartedAt = task.StartedAt
+			newtask.Version = task.Version
+			newapp.Tasks = append(newapp.Tasks, newtask)
+			config.Apps[app.Id] = newapp
 		}
 	}
 }
