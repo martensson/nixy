@@ -10,7 +10,7 @@ Nixy is a daemon that automatically configures Nginx for web services deployed o
 * Single binary with no other dependencies *(except Nginx/Openresty)*
 * Written in Go to be blazingly fast and concurrent.
 * All the features you would expect from Nginx:
-    * HTTP/TCP load balancing, HTTP/2 termination, websockets, SSL/TLS termination, caching/compression, authentication, media streaming, static file serving, etc.
+    * HTTP/TCP/UDP load balancing, HTTP/2 termination, websockets, SSL/TLS termination, caching/compression, authentication, media streaming, static file serving, etc.
 * Zero downtime with Nginx fall-back mechanism for sick backends and hot config reload.
 * Easy to customize your needs with templating.
 * Statistics via statsd *(successful/failed updates, timings)*.
@@ -92,6 +92,10 @@ This will now match both `foo` and `bar` as the new subdomain/host.
 
 Nixy uses the standard Go (Golang) [template package](https://golang.org/pkg/text/template/) to generate its config. It's a powerful and easy to use language to fully customize the nginx config. The default template is meant to be a working base that adds some sane defaults for Nginx. If needed just extend it or modify to suite your environment the best.
 
+If you are unsure of what variables you can use inside your template just do a `GET /v1/config` and you will receive a JSON response of everything available. All labels and environment variables are available. Other options could be to enable websockets, HTTP/2, SSL/TLS, or to control ports, logging, load balancing method, or any other custom settings your applications need.
+
+#### HTTP Load Balancing / Proxy
+
 Examples:
 
 **Add some ACL rules to block traffic from outside the internal network? Add a Label called `internal` to your app and the following snippet to your template:**
@@ -122,7 +126,13 @@ add_header X-Environment {{ $app.Env.APP_ENV }} always;
 {{- end}}
 ```
 
-If you are unsure of what variables you can use inside your template just do a `GET /v1/config` and you will receive a JSON response of everything available. All labels and environment variables are available. Other options could be to enable websockets, HTTP/2, SSL/TLS, or to control ports, logging, load balancing method, or any other custom settings your applications need.
+#### TCP/UDP Load Balancing / Proxy
+
+It is possible to use Nixy to configure nginx to be a proxy for TCP or UDP traffic.
+
+Please check the `nginx-stream.tmpl` example and adapt it your own needs. It assumes you have configured `PortDefinitions` correctly for all your services.
+
+You will need the latest NGINX Open Source built with the --with-stream configuration flag, or latest NGINX Plus.
 
 ### Nixy API
 
