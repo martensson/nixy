@@ -130,7 +130,7 @@ add_header X-Environment {{ $app.Env.APP_ENV }} always;
 
 It is possible to use Nixy to configure nginx to be a proxy for TCP or UDP traffic.
 
-Please check the `nginx-stream.tmpl` example and adapt it your own needs. It assumes you have configured `PortDefinitions` correctly for all your services.
+Please check the `nginx-stream.tmpl` template and adapt it to your own needs. It assumes you have configured `PortDefinitions` correctly for all your services in Marathon.
 
 You will need the latest NGINX Open Source built with the --with-stream configuration flag, or latest NGINX Plus.
 
