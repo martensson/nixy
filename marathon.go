@@ -391,6 +391,7 @@ func writeConf() error {
 	if err != nil {
 		return err
 	}
+	config.LastUpdates.LastConfigRendered = time.Now()
 
 	err = checkConf(tmpFile.Name())
 	if err != nil {
@@ -462,7 +463,7 @@ func reload() error {
 		}).Error("unable to generate nginx config")
 		return err
 	}
-	config.LastUpdates.LastConfigWrite = time.Now()
+	config.LastUpdates.LastConfigValid = time.Now()
 	err = reloadNginx()
 	if err != nil {
 		logger.WithFields(logrus.Fields{
