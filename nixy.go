@@ -56,9 +56,10 @@ type Config struct {
 }
 
 type Updates struct {
-	LastSync        time.Time
-	LastConfigWrite time.Time
-	LastNginxReload time.Time
+	LastSync           	time.Time
+	LastConfigRendered	time.Time
+	LastConfigValid		time.Time
+	LastNginxReload    	time.Time
 }
 
 type StatsdConfig struct {
