@@ -333,11 +333,16 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 						newapp.Hosts = append(newapp.Hosts, host)
 					}
 				} else {
-					// Return app id where '/' are replaced with '.'.
-					// Needed if directories are used.
-					fields := strings.FieldsFunc(app.Id,
-						func(c rune) bool { return c == '/' })
-					newapp.Hosts = append(newapp.Hosts, strings.Join(fields, "."))
+					// If directories are used lets use them as subdomain dividers.
+					// Ex: /project/app becomes app.project
+					// Ex: /app becomes just app
+					domains := strings.Split(app.Id[1:], "/")
+					for i, j := 0, len(domains)-1; i < j; i, j = i+1, j-1 {
+						domains[i], domains[j] = domains[j], domains[i]
+					}
+					host := strings.Join(domains, ".")
+					fmt.Println(host)
+					newapp.Hosts = append(newapp.Hosts, host)
 				}
 				for _, confapp := range config.Apps {
 					for _, host := range confapp.Hosts {
