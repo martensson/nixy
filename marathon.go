@@ -341,7 +341,6 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 						domains[i], domains[j] = domains[j], domains[i]
 					}
 					host := strings.Join(domains, ".")
-					fmt.Println(host)
 					newapp.Hosts = append(newapp.Hosts, host)
 				}
 				for _, confapp := range config.Apps {
