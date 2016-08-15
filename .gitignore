@@ -2,6 +2,7 @@ nixy
 *local*
 dist
 nginx.conf
+.nginx.conf.tmp-*
 
 *.cgo1.go
 *.cgo2.c

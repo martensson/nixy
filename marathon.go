@@ -384,7 +384,8 @@ func writeConf() error {
 		return err
 	}
 
-	tmpFile, err := ioutil.TempFile("", "nixy")
+	parent := filepath.Dir(config.Nginx_config)
+	tmpFile, err := ioutil.TempFile(parent, ".nginx.conf.tmp-")
 	defer tmpFile.Close()
 
 	err = template.Execute(tmpFile, config)
