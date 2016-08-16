@@ -8,17 +8,18 @@ import (
 	"time"
 )
 
-const (
-	MAX_PACKET_SIZE = 65536 - 8 - 20 // 8-byte UDP header, 20-byte IP header
-)
+const maxPacketSize = 65536 - 8 - 20 // 8-byte UDP header, 20-byte IP header
 
+// Statter collects the ways clients can send observations to a StatsD server.
 type Statter interface {
 	Counter(sampleRate float32, bucket string, n ...int)
 	Timing(sampleRate float32, bucket string, d ...time.Duration)
 	Gauge(sampleRate float32, bucket string, value ...string)
 }
 
-type statsd struct {
+// Statsd implements the Statter interface by writing StatsD formatted messages
+// to the underlying writer.
+type Statsd struct {
 	w io.Writer
 }
 
@@ -27,7 +28,7 @@ type statsd struct {
 // ready to use.
 //
 // Note that g2s currently performs no management on the connection it creates.
-func Dial(proto, endpoint string) (Statter, error) {
+func Dial(proto, endpoint string) (*Statsd, error) {
 	c, err := net.DialTimeout(proto, endpoint, 2*time.Second)
 	if err != nil {
 		return nil, err
@@ -43,10 +44,8 @@ func Dial(proto, endpoint string) (Statter, error) {
 // Note that g2s provides no synchronization. If you pass an io.Writer which
 // is not goroutine-safe, for example a bytes.Buffer, you must make sure you
 // synchronize your calls to the Statter methods.
-func New(w io.Writer) (Statter, error) {
-	return &statsd{
-		w: w,
-	}, nil
+func New(w io.Writer) (*Statsd, error) {
+	return &Statsd{w: w}, nil
 }
 
 // bufferize folds the slice of sendables into a slice of byte-buffers,
@@ -73,10 +72,10 @@ func bufferize(sendables []sendable, max int) [][]byte {
 }
 
 // publish folds the slice of sendables into one or more packets, each of which
-// will be no larger than MAX_PACKET_SIZE. It then writes them, one by one,
+// will be no larger than maxPacketSize. It then writes them, one by one,
 // into the Statsd io.Writer.
-func (s *statsd) publish(msgs []sendable) {
-	for _, buf := range bufferize(msgs, MAX_PACKET_SIZE) {
+func (s *Statsd) publish(msgs []sendable) {
+	for _, buf := range bufferize(msgs, maxPacketSize) {
 		// In the base case, when the Statsd struct is backed by a net.Conn,
 		// "Multiple goroutines may invoke methods on a Conn simultaneously."
 		//   -- http://golang.org/pkg/net/#Conn
@@ -111,12 +110,12 @@ func maybeSample(r float32) (sampling, bool) {
 	}, true
 }
 
-// Counter sends one or more counter statistics to statsd.
+// Counter sends one or more counter statistics to StatsD.
 //
 // Application code should call it for every potential invocation of a
 // statistic; it uses the sampleRate to determine whether or not to send or
 // squelch the data, on an aggregate basis.
-func (s *statsd) Counter(sampleRate float32, bucket string, n ...int) {
+func (s *Statsd) Counter(sampleRate float32, bucket string, n ...int) {
 	samp, ok := maybeSample(sampleRate)
 	if !ok {
 		return
@@ -134,12 +133,12 @@ func (s *statsd) Counter(sampleRate float32, bucket string, n ...int) {
 	s.publish(msgs)
 }
 
-// Timing sends one or more timing statistics to statsd.
+// Timing sends one or more timing statistics to StatsD.
 //
 // Application code should call it for every potential invocation of a
 // statistic; it uses the sampleRate to determine whether or not to send or
 // squelch the data, on an aggregate basis.
-func (s *statsd) Timing(sampleRate float32, bucket string, d ...time.Duration) {
+func (s *Statsd) Timing(sampleRate float32, bucket string, d ...time.Duration) {
 	samp, ok := maybeSample(sampleRate)
 	if !ok {
 		return
@@ -157,12 +156,12 @@ func (s *statsd) Timing(sampleRate float32, bucket string, d ...time.Duration) {
 	s.publish(msgs)
 }
 
-// Gauge sends one or more gauge statistics to statsd.
+// Gauge sends one or more gauge statistics to Statsd.
 //
 // Application code should call it for every potential invocation of a
 // statistic; it uses the sampleRate to determine whether or not to send or
 // squelch the data, on an aggregate basis.
-func (s *statsd) Gauge(sampleRate float32, bucket string, v ...string) {
+func (s *Statsd) Gauge(sampleRate float32, bucket string, v ...string) {
 	samp, ok := maybeSample(sampleRate)
 	if !ok {
 		return
