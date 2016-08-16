@@ -57,16 +57,18 @@ Nixy is a daemon that automatically configures Nginx for web services deployed o
 
 ## Using Nixy
 
-Routing is based on the HTTP Host header matching app name by default.
+Routing is based on the HTTP Host header matching app ID by default. 
+
+If apps are organized under a directory structure the directory will become the root subdomain.
 
 This is easy to change and customize to your own choosing by editing the
 nginx.tmpl file. For example if you prefer routing based on uri instead of subdomains.
 
-Example to access your apps app1,app2,app3 running inside Mesos and Marathon:
+Example to access your apps /bar1, /bar2, /foo/bar3 running inside Mesos and Marathon:
 
-    curl -i localhost/ -H 'Host: app1.example.com'
-    curl -i localhost/ -H 'Host: app2.example.com'
-    curl -i localhost/ -H 'Host: app3.example.com'
+    curl -i localhost/ -H 'Host: bar1.example.com'
+    curl -i localhost/ -H 'Host: bar2.example.com'
+    curl -i localhost/ -H 'Host: bar3.foo.example.com'
 
 Assuming you have configured nginx on port 80.
 
@@ -87,12 +89,6 @@ It's also possible to add multiple subdomains to a single app, dividing by a spa
     },
 
 This will now match both `foo` and `bar` as the new subdomain/host.
-
-If no `subdomain` labels are set the default behavior is to use the application ID as host.
-
-If the application is organized under a directory structure the directory will become the root subdomain.
-
-Examples: `/bar` becomes `bar`, and `/foo/bar` becomes `bar.foo`
 
 ### Template
 
