@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -79,16 +80,14 @@ func eventStream() {
 			if config.User != "" {
 				req.SetBasicAuth(config.User, config.Pass)
 			}
-			cancel := make(chan struct{})
+			// Using new context package from Go 1.7
+			ctx, cancel := context.WithCancel(context.TODO())
 			// initial request cancellation timer of 15s
 			timer := time.AfterFunc(15*time.Second, func() {
-				defer func() {
-					recover()
-				}()
-				defer close(cancel)
-				logger.Warn("event stream request was cancelled")
+				cancel()
+				logger.Warn("No data for 15s, event stream request was cancelled")
 			})
-			req.Cancel = cancel
+			req = req.WithContext(ctx)
 			resp, err := client.Do(req)
 			if err != nil {
 				logger.WithFields(logrus.Fields{
