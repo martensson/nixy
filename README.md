@@ -64,7 +64,7 @@ If apps are organized under a directory structure the directory will become the 
 This is easy to change and customize to your own choosing by editing the
 nginx.tmpl file. For example if you prefer routing based on uri instead of subdomains.
 
-Example to access your apps /bar1, /bar2, /foo/bar3 running inside Mesos and Marathon:
+Example to access your apps `/bar1`, `/bar2`, `/foo/bar3` running inside Mesos and Marathon:
 
     curl -i localhost/ -H 'Host: bar1.example.com'
     curl -i localhost/ -H 'Host: bar2.example.com'
