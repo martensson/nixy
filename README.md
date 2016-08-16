@@ -89,7 +89,9 @@ It's also possible to add multiple subdomains to a single app, dividing by a spa
 This will now match both `foo` and `bar` as the new subdomain/host.
 
 If no `subdomain` labels are set the default behavior is to use the application ID as host.
+
 If the application is organized under a directory structure the directory will become the root subdomain.
+
 Examples: `/bar` becomes `bar`, and `/foo/bar` becomes `bar.foo`
 
 ### Template
