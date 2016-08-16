@@ -88,6 +88,10 @@ It's also possible to add multiple subdomains to a single app, dividing by a spa
 
 This will now match both `foo` and `bar` as the new subdomain/host.
 
+If no `subdomain` labels are set the default behavior is to use the application ID as host.
+If the application is organized under a directory structure the directory will become the root subdomain.
+Examples: `/bar` becomes `bar`, and `/foo/bar` becomes `bar.foo`
+
 ### Template
 
 Nixy uses the standard Go (Golang) [template package](https://golang.org/pkg/text/template/) to generate its config. It's a powerful and easy to use language to fully customize the nginx config. The default template is meant to be a working base that adds some sane defaults for Nginx. If needed just extend it or modify to suite your environment the best.
