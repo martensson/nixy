@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"text/template"
 	"time"
@@ -19,22 +20,7 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
-type MarathonTasks struct {
-	Tasks []struct {
-		AppId              string `json:"appId"`
-		HealthCheckResults []struct {
-			Alive bool `json:"alive"`
-		} `json:"healthCheckResults"`
-		Host         string  `json:"host"`
-		Id           string  `json:"id"`
-		Ports        []int64 `json:"ports"`
-		ServicePorts []int64 `json:"servicePorts"`
-		StagedAt     string  `json:"stagedAt"`
-		StartedAt    string  `json:"startedAt"`
-		Version      string  `json:"version"`
-	} `json:"tasks"`
-}
-
+// Struct for our apps nested with tasks.
 type MarathonApps struct {
 	Apps []struct {
 		Id              string            `json:"id"`
@@ -46,6 +32,19 @@ type MarathonApps struct {
 			Protocol string            `json:"protocol"`
 			Labels   map[string]string `json:"labels"`
 		} `json:"portDefinitions"`
+		Tasks []struct {
+			AppId              string `json:"appId"`
+			HealthCheckResults []struct {
+				Alive bool `json:"alive"`
+			} `json:"healthCheckResults"`
+			Host         string  `json:"host"`
+			Id           string  `json:"id"`
+			Ports        []int64 `json:"ports"`
+			ServicePorts []int64 `json:"servicePorts"`
+			StagedAt     string  `json:"stagedAt"`
+			StartedAt    string  `json:"startedAt"`
+			Version      string  `json:"version"`
+		} `json:"tasks"`
 	} `json:"apps"`
 }
 
@@ -133,7 +132,7 @@ func eventStream() {
 
 func endpointHealth() {
 	go func() {
-		ticker := time.NewTicker(10 * time.Second)
+		ticker := time.NewTicker(2 * time.Second)
 		for {
 			select {
 			case <-ticker.C:
@@ -191,25 +190,13 @@ func eventWorker() {
 			select {
 			case <-ticker.C:
 				<-eventqueue
-				start := time.Now()
-				err := reload()
-				elapsed := time.Since(start)
-				if err != nil {
-					logger.Error("config update failed")
-					go statsCount("reload.failed", 1)
-				} else {
-					logger.WithFields(logrus.Fields{
-						"took": elapsed,
-					}).Info("config updated")
-					go statsCount("reload.success", 1)
-					go statsTiming("reload.time", elapsed)
-				}
+				reload()
 			}
 		}
 	}()
 }
 
-func fetchApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) error {
+func fetchApps(jsonapps *MarathonApps) error {
 	var endpoint string
 	for _, es := range health.Endpoints {
 		if es.Healthy == true {
@@ -225,78 +212,35 @@ func fetchApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) error {
 		Timeout:   5 * time.Second,
 		Transport: tr,
 	}
-	// take advantage of goroutines and run both reqs concurrent.
-	appschn := make(chan error)
-	taskschn := make(chan error)
-	go func() {
-		req, err := http.NewRequest("GET", endpoint+"/v2/tasks", nil)
-		if err != nil {
-			taskschn <- err
-			return
-		}
-		req.Header.Set("Accept", "application/json")
-		if config.User != "" {
-			req.SetBasicAuth(config.User, config.Pass)
-		}
-		resp, err := client.Do(req)
-		if err != nil {
-			taskschn <- err
-			return
-		}
-		defer resp.Body.Close()
-		decoder := json.NewDecoder(resp.Body)
-		err = decoder.Decode(&jsontasks)
-		if err != nil {
-			taskschn <- err
-			return
-		}
-		taskschn <- nil
-	}()
-	go func() {
-		req, err := http.NewRequest("GET", endpoint+"/v2/apps", nil)
-		if err != nil {
-			appschn <- err
-			return
-		}
-		req.Header.Set("Accept", "application/json")
-		if config.User != "" {
-			req.SetBasicAuth(config.User, config.Pass)
-		}
-		resp, err := client.Do(req)
-		if err != nil {
-			appschn <- err
-			return
-		}
-		defer resp.Body.Close()
-		decoder := json.NewDecoder(resp.Body)
-		err = decoder.Decode(&jsonapps)
-		if err != nil {
-			appschn <- err
-			return
-		}
-		appschn <- nil
-	}()
-	appserr := <-appschn
-	taskserr := <-taskschn
-	if appserr != nil {
-		return appserr
+	// fetch all apps and tasks with a single request.
+	req, err := http.NewRequest("GET", endpoint+"/v2/apps?embed=apps.tasks", nil)
+	if err != nil {
+		return err
 	}
-	if taskserr != nil {
-		return taskserr
+	req.Header.Set("Accept", "application/json")
+	if config.User != "" {
+		req.SetBasicAuth(config.User, config.Pass)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&jsonapps)
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
-func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
+func syncApps(jsonapps *MarathonApps) bool {
 	config.Lock()
 	defer config.Unlock()
-	config.Apps = make(map[string]App)
+	apps := make(map[string]App)
 	for _, app := range jsonapps.Apps {
-	OUTER:
-		for _, task := range jsontasks.Tasks {
-			if task.AppId != app.Id {
-				continue
-			}
+		var newapp = App{}
+		for _, task := range app.Tasks {
 			// lets skip tasks that does not expose any ports.
 			if len(task.Ports) == 0 {
 				continue
@@ -318,56 +262,6 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 					continue
 				}
 			}
-			if _, ok := config.Apps[app.Id]; !ok {
-				var newapp = App{}
-				if s, ok := app.Labels["subdomain"]; ok {
-					hosts := strings.Split(s, " ")
-					for _, host := range hosts {
-						newapp.Hosts = append(newapp.Hosts, host)
-					}
-				} else if s, ok := app.Labels["moxy_subdomain"]; ok {
-					// to be compatible with moxy
-					hosts := strings.Split(s, " ")
-					for _, host := range hosts {
-						newapp.Hosts = append(newapp.Hosts, host)
-					}
-				} else {
-					// If directories are used lets use them as subdomain dividers.
-					// Ex: /project/app becomes app.project
-					// Ex: /app becomes just app
-					domains := strings.Split(app.Id[1:], "/")
-					for i, j := 0, len(domains)-1; i < j; i, j = i+1, j-1 {
-						domains[i], domains[j] = domains[j], domains[i]
-					}
-					host := strings.Join(domains, ".")
-					newapp.Hosts = append(newapp.Hosts, host)
-				}
-				for _, confapp := range config.Apps {
-					for _, host := range confapp.Hosts {
-						for _, newhost := range newapp.Hosts {
-							if newhost == host {
-								logger.WithFields(logrus.Fields{
-									"app":       app.Id,
-									"subdomain": host,
-								}).Warn("duplicate subdomain label, ignoring app")
-								continue OUTER
-							}
-						}
-					}
-				}
-				newapp.Labels = app.Labels
-				newapp.Env = app.Env
-				for _, pds := range app.PortDefinitions {
-					pd := PortDefinitions{
-						Port:     pds.Port,
-						Protocol: pds.Protocol,
-						Labels:   pds.Labels,
-					}
-					newapp.PortDefinitions = append(newapp.PortDefinitions, pd)
-				}
-				config.Apps[app.Id] = newapp
-			}
-			newapp := config.Apps[app.Id]
 			var newtask = Task{}
 			newtask.Host = task.Host
 			newtask.Ports = task.Ports
@@ -376,8 +270,70 @@ func syncApps(jsontasks *MarathonTasks, jsonapps *MarathonApps) {
 			newtask.StartedAt = task.StartedAt
 			newtask.Version = task.Version
 			newapp.Tasks = append(newapp.Tasks, newtask)
-			config.Apps[app.Id] = newapp
 		}
+		// Lets ignore apps if no tasks are available
+		if len(newapp.Tasks) > 0 {
+			if s, ok := app.Labels["subdomain"]; ok {
+				hosts := strings.Split(s, " ")
+				for _, host := range hosts {
+					newapp.Hosts = append(newapp.Hosts, host)
+				}
+			} else if s, ok := app.Labels["moxy_subdomain"]; ok {
+				// to be compatible with moxy
+				hosts := strings.Split(s, " ")
+				for _, host := range hosts {
+					newapp.Hosts = append(newapp.Hosts, host)
+				}
+			} else {
+				// If directories are used lets use them as subdomain dividers.
+				// Ex: /project/app becomes app.project
+				// Ex: /app becomes just app
+				domains := strings.Split(app.Id[1:], "/")
+				for i, j := 0, len(domains)-1; i < j; i, j = i+1, j-1 {
+					domains[i], domains[j] = domains[j], domains[i]
+				}
+				host := strings.Join(domains, ".")
+				newapp.Hosts = append(newapp.Hosts, host)
+			}
+			// Check for duplicated subdomain labels
+			for _, confapp := range apps {
+				for _, host := range confapp.Hosts {
+					for _, newhost := range newapp.Hosts {
+						if newhost == host {
+							logger.WithFields(logrus.Fields{
+								"app":       app.Id,
+								"subdomain": host,
+							}).Warn("duplicate subdomain label")
+							// reset hosts if duplicate.
+							newapp.Hosts = nil
+						}
+					}
+				}
+			}
+			// Got duplicated subdomains, lets ignore this one.
+			if len(newapp.Hosts) == 0 {
+				continue
+			}
+			newapp.Labels = app.Labels
+			newapp.Env = app.Env
+			for _, pds := range app.PortDefinitions {
+				pd := PortDefinitions{
+					Port:     pds.Port,
+					Protocol: pds.Protocol,
+					Labels:   pds.Labels,
+				}
+				newapp.PortDefinitions = append(newapp.PortDefinitions, pd)
+			}
+			apps[app.Id] = newapp
+		}
+	}
+	// Not all events bring changes, so lets see if anything is new.
+	eq := reflect.DeepEqual(apps, config.Apps)
+	if eq {
+		return true
+	} else {
+		config.Apps = apps
+		return false
 	}
 }
 
@@ -396,17 +352,14 @@ func writeConf() error {
 		return err
 	}
 	config.LastUpdates.LastConfigRendered = time.Now()
-
 	err = checkConf(tmpFile.Name())
 	if err != nil {
 		return err
 	}
-
 	err = os.Rename(tmpFile.Name(), config.Nginx_config)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -448,24 +401,30 @@ func reloadNginx() error {
 	return nil
 }
 
-func reload() error {
-	jsontasks := MarathonTasks{}
+func reload() {
+	start := time.Now()
 	jsonapps := MarathonApps{}
-	err := fetchApps(&jsontasks, &jsonapps)
+	err := fetchApps(&jsonapps)
 	if err != nil {
 		logger.WithFields(logrus.Fields{
 			"error": err.Error(),
 		}).Error("unable to sync from marathon")
-		return err
+		go statsCount("reload.failed", 1)
+		return
 	}
-	syncApps(&jsontasks, &jsonapps)
+	equal := syncApps(&jsonapps)
+	if equal {
+		logger.Info("no config changes")
+		return
+	}
 	config.LastUpdates.LastSync = time.Now()
 	err = writeConf()
 	if err != nil {
 		logger.WithFields(logrus.Fields{
 			"error": err.Error(),
 		}).Error("unable to generate nginx config")
-		return err
+		go statsCount("reload.failed", 1)
+		return
 	}
 	config.LastUpdates.LastConfigValid = time.Now()
 	err = reloadNginx()
@@ -473,8 +432,15 @@ func reload() error {
 		logger.WithFields(logrus.Fields{
 			"error": err.Error(),
 		}).Error("unable to reload nginx")
-		return err
+		go statsCount("reload.failed", 1)
+		return
 	}
+	elapsed := time.Since(start)
+	logger.WithFields(logrus.Fields{
+		"took": elapsed,
+	}).Info("config updated")
+	go statsCount("reload.success", 1)
+	go statsTiming("reload.time", elapsed)
 	config.LastUpdates.LastNginxReload = time.Now()
-	return nil
+	return
 }

@@ -56,10 +56,10 @@ type Config struct {
 }
 
 type Updates struct {
-	LastSync           	time.Time
-	LastConfigRendered	time.Time
-	LastConfigValid		time.Time
-	LastNginxReload    	time.Time
+	LastSync           time.Time
+	LastConfigRendered time.Time
+	LastConfigValid    time.Time
+	LastNginxReload    time.Time
 }
 
 type StatsdConfig struct {
@@ -96,7 +96,7 @@ var logger = logrus.New()
 var eventqueue = make(chan bool, 2)
 
 // Global http transport for connection reuse
-var tr = &http.Transport{}
+var tr = &http.Transport{MaxIdleConnsPerHost: 10}
 
 func newHealth() Health {
 	var h Health
