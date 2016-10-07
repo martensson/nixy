@@ -131,6 +131,7 @@ func nixy_health(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		health.Template.Message = err.Error()
 		health.Template.Healthy = false
+		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		health.Template.Message = "OK"
 		health.Template.Healthy = true
@@ -139,9 +140,16 @@ func nixy_health(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		health.Config.Message = err.Error()
 		health.Config.Healthy = false
+		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		health.Config.Message = "OK"
 		health.Config.Healthy = true
+	}
+	for _, endpoint := range health.Endpoints {
+		if (!endpoint.Healthy) {
+			w.WriteHeader(http.StatusInternalServerError)
+			break;
+		}
 	}
 	w.Header().Add("Content-Type", "application/json; charset=utf-8")
 	b, _ := json.MarshalIndent(health, "", "  ")
