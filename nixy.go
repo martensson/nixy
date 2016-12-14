@@ -181,7 +181,10 @@ func main() {
 			"error": err.Error(),
 		}).Fatal("problem parsing config")
 	}
-
+	// Lets default empty Xproxy to hostname.
+	if config.Xproxy == "" {
+		config.Xproxy, _ = os.Hostname()
+	}
 	statsd, _ = setupStatsd()
 
 	mux := mux.NewRouter()

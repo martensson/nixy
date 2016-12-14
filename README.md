@@ -32,19 +32,19 @@ Nixy is a daemon that automatically configures Nginx for web services deployed o
 2. Edit config *(default on ubuntu is /etc/nixy.toml)*:
 
     ``` toml
-    # nixy listening port
+    # Nixy listening port
     port = "6000"
-    # optional X-Proxy header name
-    xproxy = "hostname"
-    # marathon api
+    # X-Proxy header, defaults to hostname
+    xproxy = ""
+    # Marathon API
     marathon = ["http://example01:8080", "http://example02:8080"] # add all HA cluster nodes in priority order.
     user = "" # leave empty if no auth is required.
     pass = ""
-    # nginx
+    # Nginx
     nginx_config = "/etc/nginx/nginx.conf"
     nginx_template = "/etc/nginx/nginx.tmpl"
     nginx_cmd = "nginx" # optionally openresty
-    # statsd settings
+    # Statsd settings
     [statsd]
     addr = "localhost:8125" # optional for statistics
     #namespace = "nixy.my_mesos_cluster"
