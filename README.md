@@ -62,7 +62,7 @@ Routing is based on the HTTP Host header matching app ID by default.
 If apps are organized under a directory structure the directory will become the root subdomain.
 
 This is easy to change and customize to your own choosing by editing the
-nginx.tmpl file. For example if you prefer routing based on uri instead of subdomains.
+`nginx.tmpl` file. For example if you prefer routing based on uri instead of subdomains take a look at `nginx-path.tmpl`.
 
 Example to access your apps `/bar1`, `/bar2`, `/foo/bar3` running inside Mesos and Marathon:
 
