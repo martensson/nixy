@@ -146,10 +146,10 @@ func nixy_health(w http.ResponseWriter, r *http.Request) {
 		health.Config.Healthy = true
 	}
 	for _, endpoint := range health.Endpoints {
-		if (!endpoint.Healthy) {
-			w.WriteHeader(http.StatusInternalServerError)
+		if (endpoint.Healthy) {
 			break;
 		}
+		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.Header().Add("Content-Type", "application/json; charset=utf-8")
 	b, _ := json.MarshalIndent(health, "", "  ")
