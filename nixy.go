@@ -145,10 +145,14 @@ func nixy_health(w http.ResponseWriter, r *http.Request) {
 		health.Config.Message = "OK"
 		health.Config.Healthy = true
 	}
+	all_backends_down := true;
 	for _, endpoint := range health.Endpoints {
 		if (endpoint.Healthy) {
+			all_backends_down = false;
 			break;
 		}
+	}
+	if all_backends_down {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.Header().Add("Content-Type", "application/json; charset=utf-8")
