@@ -338,6 +338,8 @@ func syncApps(jsonapps *MarathonApps) bool {
 }
 
 func writeConf() error {
+	config.RLock()
+	defer config.RUnlock()
 	template, err := template.New(filepath.Base(config.Nginx_template)).ParseFiles(config.Nginx_template)
 	if err != nil {
 		return err
@@ -364,6 +366,8 @@ func writeConf() error {
 }
 
 func checkTmpl() error {
+	config.RLock()
+	defer config.RUnlock()
 	t, err := template.New(filepath.Base(config.Nginx_template)).ParseFiles(config.Nginx_template)
 	if err != nil {
 		return err
