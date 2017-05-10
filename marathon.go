@@ -380,7 +380,15 @@ func checkTmpl() error {
 }
 
 func checkConf(path string) error {
-	cmd := exec.Command(config.Nginx_cmd, "-c", path, "-t")
+	// This is to allow arguments as well. Example "docker exec nginx..."
+	args := strings.Fields(config.Nginx_cmd)
+	head := args[0]
+	args = args[1:len(args)]
+	args = append(args, "-c")
+	args = append(args, path)
+	args = append(args, "-t")
+	cmd := exec.Command(head, args...)
+	//cmd := exec.Command(parts..., "-c", path, "-t")
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	err := cmd.Run() // will wait for command to return
@@ -393,7 +401,13 @@ func checkConf(path string) error {
 }
 
 func reloadNginx() error {
-	cmd := exec.Command(config.Nginx_cmd, "-s", "reload")
+	// This is to allow arguments as well. Example "docker exec nginx..."
+	args := strings.Fields(config.Nginx_cmd)
+	head := args[0]
+	args = args[1:len(args)]
+	args = append(args, "-s")
+	args = append(args, "reload")
+	cmd := exec.Command(head, args...)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	err := cmd.Run() // will wait for command to return

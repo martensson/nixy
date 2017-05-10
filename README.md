@@ -24,14 +24,14 @@ Nixy is a daemon that automatically configures Nginx for web services deployed o
 ## Compatibility
 
 - All versions of Marathon >= v0.9.0
-- All versions of Nginx. Also compatible with [OpenResty](http://openresty.org/en/).
+- All versions of Nginx or [OpenResty](http://openresty.org/en/) (Also possible to run inside Docker).
 
 ## Getting started
 
 1. Install nixy from pre-compiled packages. Check `releases` page.
 2. Edit config *(default on ubuntu is /etc/nixy.toml)*:
 
-    ``` toml
+    ``` tom
     # Nixy listening port
     port = "6000"
     # X-Proxy header, defaults to hostname
@@ -43,7 +43,7 @@ Nixy is a daemon that automatically configures Nginx for web services deployed o
     # Nginx
     nginx_config = "/etc/nginx/nginx.conf"
     nginx_template = "/etc/nginx/nginx.tmpl"
-    nginx_cmd = "nginx" # optionally openresty
+    nginx_cmd = "nginx" # optionally "openresty" or "docker exec nginx nginx"
     # Statsd settings
     [statsd]
     addr = "localhost:8125" # optional for statistics
@@ -53,6 +53,7 @@ Nixy is a daemon that automatically configures Nginx for web services deployed o
 
 3. Optionally edit the nginx template *(default on ubuntu is /etc/nginx/nginx.tmpl)*
 4. Install [nginx](http://nginx.org/en/download.html) or [openresty](https://openresty.org/) and start the service.
+   - Or if you prefer running inside Docker: `"docker run -d --name nginx -p 7000:7000 -v /etc/nginx:/etc/nginx nginx"`. You will also need to change config `"nginx_cmd"` to `"docker exec nginx nginx"` for reloads to work correctly in this case.
 5. Start nixy! *(service nixy start)*
 
 ## Using Nixy
@@ -134,7 +135,7 @@ It is possible to use Nixy to configure nginx as a proxy for TCP or UDP traffic.
 
 Please check the `nginx-stream.tmpl` example template. It assumes you have configured `PortDefinitions` correctly for all your services in Marathon.
 
-You will need the latest NGINX Open Source built with the --with-stream configuration flag, or latest NGINX Plus.
+Latest versions of Nginx open-source comes with streaming by default. If you are running version 1.9 you will need to compile it with `--with-stream` manually. 
 
 ### Nixy API
 
