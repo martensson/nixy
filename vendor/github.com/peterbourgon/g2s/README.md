@@ -27,6 +27,19 @@ s.Timing(0.2, "my.silly.fast-process", 7*time.Millisecond)
 s.Gauge(1.0, "my.silly.status", "green")
 ```
 
+If you need to add a prefix to your metrics (for example, if you need to use an 
+API key to send metrics to your statsd service) just use `DialWithPrefix` instead
+when instantiating your statsd struct:
+
+```go
+s, err := g2s.DialWithPrefix("udp", "statsd-server:8125", "my-cool-prefix")
+if err != nil {
+	// do something
+}
+
+s.Counter(1.0, "this.gets.prefixed", 1)
+```
+
 If you use a standard UDP connection to a statsd server, all 'update'-class
 functions are goroutine safe. They should return quickly, but they're safe to
 fire in a seperate goroutine.

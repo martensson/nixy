@@ -1,10 +1,12 @@
 package g2s
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"math/rand"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -20,7 +22,8 @@ type Statter interface {
 // Statsd implements the Statter interface by writing StatsD formatted messages
 // to the underlying writer.
 type Statsd struct {
-	w io.Writer
+	w      io.Writer
+	prefix string
 }
 
 // Dial takes the same parameters as net.Dial, ie. a transport protocol
@@ -33,7 +36,17 @@ func Dial(proto, endpoint string) (*Statsd, error) {
 	if err != nil {
 		return nil, err
 	}
-	return New(c)
+	return New(c, "")
+}
+
+// Variant of Dial that accepts a prefix that will be prepended to the name of
+// all buckets sent (so it can be used with services that require an API key)
+func DialWithPrefix(proto, endpoint string, prefix string) (*Statsd, error) {
+	c, err := net.DialTimeout(proto, endpoint, 2*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	return New(c, prefix)
 }
 
 // New constructs a Statsd structure which will write statsd-protocol messages
@@ -44,8 +57,11 @@ func Dial(proto, endpoint string) (*Statsd, error) {
 // Note that g2s provides no synchronization. If you pass an io.Writer which
 // is not goroutine-safe, for example a bytes.Buffer, you must make sure you
 // synchronize your calls to the Statter methods.
-func New(w io.Writer) (*Statsd, error) {
-	return &Statsd{w: w}, nil
+func New(w io.Writer, prefix string) (*Statsd, error) {
+	if len(prefix) > 0 && !strings.HasSuffix(prefix, ".") {
+		prefix = fmt.Sprintf("%s.", prefix)
+	}
+	return &Statsd{w: w, prefix: prefix}, nil
 }
 
 // bufferize folds the slice of sendables into a slice of byte-buffers,
@@ -124,6 +140,7 @@ func (s *Statsd) Counter(sampleRate float32, bucket string, n ...int) {
 	msgs := make([]sendable, len(n))
 	for i, ni := range n {
 		msgs[i] = &counterUpdate{
+			prefix:   s.prefix,
 			bucket:   bucket,
 			n:        ni,
 			sampling: samp,
@@ -147,6 +164,7 @@ func (s *Statsd) Timing(sampleRate float32, bucket string, d ...time.Duration) {
 	msgs := make([]sendable, len(d))
 	for i, di := range d {
 		msgs[i] = &timingUpdate{
+			prefix:   s.prefix,
 			bucket:   bucket,
 			ms:       int(di.Nanoseconds() / 1e6),
 			sampling: samp,
@@ -170,6 +188,7 @@ func (s *Statsd) Gauge(sampleRate float32, bucket string, v ...string) {
 	msgs := make([]sendable, len(v))
 	for i, vi := range v {
 		msgs[i] = &gaugeUpdate{
+			prefix:   s.prefix,
 			bucket:   bucket,
 			val:      vi,
 			sampling: samp,

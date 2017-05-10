@@ -3,16 +3,16 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "hqDDDpue/5363luidNMBS8z8eJU=",
+			"checksumSHA1": "pPH/BoINXxzYDObljpsGZbysMrw=",
 			"path": "github.com/BurntSushi/toml",
-			"revision": "99064174e013895bbd9b025c31100bd1d9b590ca",
-			"revisionTime": "2016-07-17T15:07:09Z"
+			"revision": "b26d9c308763d68093482582cea63d69be07a0f0",
+			"revisionTime": "2017-03-28T06:15:53Z"
 		},
 		{
-			"checksumSHA1": "h5Q1o+kA7VMAR5QpBzVJZbBEgC0=",
+			"checksumSHA1": "m+iiamnbukzE8kFPfBche6D0FmQ=",
 			"path": "github.com/Sirupsen/logrus",
-			"revision": "881bee4e20a5d11a6a88a5667c6f292072ac1963",
-			"revisionTime": "2016-12-02T02:35:07Z"
+			"revision": "5b60b3d3ee017ed00bcd0225fcca7acab767844b",
+			"revisionTime": "2017-05-04T07:10:19Z"
 		},
 		{
 			"checksumSHA1": "g/V4qrXjUGG9B+e3hB+4NAYJ5Gs=",
@@ -21,22 +21,22 @@
 			"revisionTime": "2016-08-17T18:46:32Z"
 		},
 		{
-			"checksumSHA1": "urMd7A9QPAJYY0GZJL9qBhlUmD8=",
+			"checksumSHA1": "zmCk+lgIeiOf0Ng9aFP9aFy8ksE=",
 			"path": "github.com/gorilla/mux",
-			"revision": "757bef944d0f21880861c2dd9c871ca543023cba",
-			"revisionTime": "2016-09-20T23:08:13Z"
+			"revision": "4c1c3952b7d9d0a061a3fa7b36fd373ba0398ebc",
+			"revisionTime": "2017-04-27T04:12:50Z"
 		},
 		{
-			"checksumSHA1": "0LUw8QB735MsjiqDMLzf3x26g0o=",
+			"checksumSHA1": "Z7RQY+vlVQZepyGvfS01Q4nH4m0=",
 			"path": "github.com/peterbourgon/g2s",
-			"revision": "5767a0b2078638d14800683fd0fe425604883f63",
-			"revisionTime": "2016-07-22T08:57:17Z"
+			"revision": "d4e7ad98afea530d947adb4490aa062353856767",
+			"revisionTime": "2017-02-23T12:23:36Z"
 		},
 		{
-			"checksumSHA1": "8SH0adTcQlA+W5dzqiQ3Hft2VXg=",
+			"checksumSHA1": "oS0UZOGWVVsVciOQ8nZJ582mFF8=",
 			"path": "golang.org/x/sys/unix",
-			"revision": "478fcf54317e52ab69f40bb4c7a1520288d7f7ea",
-			"revisionTime": "2016-12-05T15:46:50Z"
+			"revision": "9ccfe848b9db8435a24c424abbc07a921adf1df5",
+			"revisionTime": "2017-04-27T03:54:25Z"
 		}
 	],
 	"rootPath": "github.com/martensson/nixy"
