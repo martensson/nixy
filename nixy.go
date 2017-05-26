@@ -50,7 +50,7 @@ type Config struct {
 	Nginx_config   	string   `json:"-"`
 	Nginx_template 	string   `json:"-"`
 	Left_delimiter 	string   `json:"{{"`
-	Right_delimiter string   `json:"{{"`
+	Right_delimiter string   `json:"}}"`
 	Nginx_cmd      	string   `json:"-"`
 	Statsd         	StatsdConfig
 	LastUpdates    	Updates
