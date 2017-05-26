@@ -345,8 +345,6 @@ func writeConf() error {
 		Delims(config.Left_delimiter, config.Right_delimiter).
 		ParseFiles(config.Nginx_template)
 
-	fmt.Println(template)
-
 	if err != nil {
 		return err
 	}
