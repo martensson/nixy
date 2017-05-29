@@ -90,6 +90,7 @@ var VERSION string //added by goxc
 var config Config
 var statsd g2s.Statter
 var health Health
+var lastConfig string
 var logger = logrus.New()
 
 // Eventqueue with buffer of two, because we dont really need more.
@@ -136,7 +137,7 @@ func nixy_health(w http.ResponseWriter, r *http.Request) {
 		health.Template.Message = "OK"
 		health.Template.Healthy = true
 	}
-	err = checkConf(config.Nginx_config)
+	err = checkConf(lastConfig)
 	if err != nil {
 		health.Config.Message = err.Error()
 		health.Config.Healthy = false
@@ -145,11 +146,11 @@ func nixy_health(w http.ResponseWriter, r *http.Request) {
 		health.Config.Message = "OK"
 		health.Config.Healthy = true
 	}
-	all_backends_down := true;
+	all_backends_down := true
 	for _, endpoint := range health.Endpoints {
-		if (endpoint.Healthy) {
-			all_backends_down = false;
-			break;
+		if endpoint.Healthy {
+			all_backends_down = false
+			break
 		}
 	}
 	if all_backends_down {

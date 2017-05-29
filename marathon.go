@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 	"text/template"
 	"time"
@@ -275,14 +276,30 @@ func syncApps(jsonapps *MarathonApps) bool {
 		if len(newapp.Tasks) > 0 {
 			if s, ok := app.Labels["subdomain"]; ok {
 				hosts := strings.Split(s, " ")
+				r, _ := regexp.Compile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 				for _, host := range hosts {
-					newapp.Hosts = append(newapp.Hosts, host)
+					if r.MatchString(host) {
+						newapp.Hosts = append(newapp.Hosts, host)
+					} else {
+						logger.WithFields(logrus.Fields{
+							"app":       app.Id,
+							"subdomain": host,
+						}).Warn("invalid subdomain label")
+					}
 				}
+				// to be compatible with moxy, will probably be removed eventually.
 			} else if s, ok := app.Labels["moxy_subdomain"]; ok {
-				// to be compatible with moxy
 				hosts := strings.Split(s, " ")
+				r, _ := regexp.Compile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 				for _, host := range hosts {
-					newapp.Hosts = append(newapp.Hosts, host)
+					if r.MatchString(host) {
+						newapp.Hosts = append(newapp.Hosts, host)
+					} else {
+						logger.WithFields(logrus.Fields{
+							"app":       app.Id,
+							"subdomain": host,
+						}).Warn("invalid subdomain label")
+					}
 				}
 			} else {
 				// If directories are used lets use them as subdomain dividers.
@@ -348,7 +365,7 @@ func writeConf() error {
 	parent := filepath.Dir(config.Nginx_config)
 	tmpFile, err := ioutil.TempFile(parent, ".nginx.conf.tmp-")
 	defer tmpFile.Close()
-
+	lastConfig = tmpFile.Name()
 	err = template.Execute(tmpFile, config)
 	if err != nil {
 		return err
@@ -362,6 +379,7 @@ func writeConf() error {
 	if err != nil {
 		return err
 	}
+	lastConfig = config.Nginx_config
 	return nil
 }
 
