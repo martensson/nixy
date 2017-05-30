@@ -400,11 +400,12 @@ func checkTmpl() error {
 func getTmpl() (*template.Template, error) {
 	return template.New(filepath.Base(config.Nginx_template)).
 		Funcs(template.FuncMap{
-			"split": strings.Split,
-			"join": strings.Join,
-			"trim": strings.Trim,
-			"replace": strings.Replace,
-			"getenv": os.Getenv}).
+			"split":    strings.Split,
+			"join":     strings.Join,
+			"trim":     strings.Trim,
+			"replace":  strings.Replace,
+			"getenv":   os.Getenv,
+			"datetime": time.Now}).
 		ParseFiles(config.Nginx_template)
 }
 
