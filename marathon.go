@@ -410,6 +410,10 @@ func getTmpl() (*template.Template, error) {
 }
 
 func checkConf(path string) error {
+	// Always return OK if disabled in config.
+	if config.Nginx_ignore_check {
+		return nil
+	}
 	// This is to allow arguments as well. Example "docker exec nginx..."
 	args := strings.Fields(config.Nginx_cmd)
 	head := args[0]
