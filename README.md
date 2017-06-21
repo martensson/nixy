@@ -139,6 +139,41 @@ Latest versions of Nginx open-source comes with streaming by default. If you are
 
 #### Additional template methods
 
+##### split
+
+Wrapper for [strings.Split](http://golang.org/pkg/strings/#Split). Splits the input string on the separating string and returns a slice of substrings.
+
+```
+{{- $url := split "localhost:8080" ":" }}
+    host: {{index $url 0}}
+    port: {{index $url 1}}
+```
+
+##### join
+
+Alias for the [strings.Join](https://golang.org/pkg/strings/#Join) function.
+
+```
+apps: {{join $applist ","}}
+```
+
+##### trim
+
+Alias for the [strings.Trim](https://golang.org/pkg/strings/#Trim) function.
+
+```
+host: {{trim ".app.test.com." "."}}
+```
+
+##### replace
+
+Alias for the [strings.Replace](https://golang.org/pkg/strings/#Replace) function.
+
+```
+{{$host := "app/test/com"}}
+host = {{replace $host "/" "." -1}}
+```
+
 ##### getenv
 
 Wrapper for [os.Getenv](https://golang.org/pkg/os/#Getenv). Retrieves the value of the environment variable named by the key. It returns the value, which will be empty if the variable is not present.
