@@ -241,6 +241,9 @@ func syncApps(jsonapps *MarathonApps) bool {
 	apps := make(map[string]App)
 	for _, app := range jsonapps.Apps {
 		var newapp = App{}
+		if config.Realm != "" && app.Labels["NIXY_REALM"] != config.Realm {
+			continue
+		}
 		for _, task := range app.Tasks {
 			// lets skip tasks that does not expose any ports.
 			if len(task.Ports) == 0 {

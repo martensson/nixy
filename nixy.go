@@ -43,6 +43,7 @@ type App struct {
 type Config struct {
 	sync.RWMutex
 	Xproxy             string
+	Realm              string
 	Port               string   `json:"-"`
 	Marathon           []string `json:"-"`
 	User               string   `json:"-"`
