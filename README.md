@@ -40,6 +40,9 @@ Nixy is a daemon that automatically configures Nginx for web services deployed o
     marathon = ["http://example01:8080", "http://example02:8080"] # add all HA cluster nodes in priority order.
     user = "" # leave empty if no auth is required.
     pass = ""
+    # Nixy realm, set this if you want to be able to filter your apps (e.g. when you have different loadbalancers which should expose different apps)
+    # You will also need to set "NIXY_REALM" label at your app to be included in generated conf
+    realm = ""
     # Nginx
     nginx_config = "/etc/nginx/nginx.conf"
     nginx_template = "/etc/nginx/nginx.tmpl"
