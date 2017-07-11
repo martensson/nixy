@@ -47,6 +47,7 @@ Nixy is a daemon that automatically configures Nginx for web services deployed o
     nginx_config = "/etc/nginx/nginx.conf"
     nginx_template = "/etc/nginx/nginx.tmpl"
     nginx_cmd = "nginx" # optionally "openresty" or "docker exec nginx nginx"
+    nginx_ignore_check = false # optionally disable nginx config test. Health check will always show OK.
     # Statsd settings
     [statsd]
     addr = "localhost:8125" # optional for statistics
