@@ -1,0 +1,15 @@
+# Build customization
+builds:
+  - goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+# Archive customization
+archive:
+  format: tar.gz
+  files:
+    - LICENSE
+    - README.md
+    - nginx.tmpl
+    - nixy.toml

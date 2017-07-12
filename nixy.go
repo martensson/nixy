@@ -96,10 +96,10 @@ type Health struct {
 	Endpoints []EndpointStatus
 }
 
-// VERSION set by ldflags
-var VERSION string
-
 // Global variables
+var version = "master" //set by ldflags
+var date string        //set by ldflags
+var commit string      //set by ldflags
 var config Config
 var statsd g2s.Statter
 var health Health
@@ -183,16 +183,20 @@ func nixyConfig(w http.ResponseWriter, r *http.Request) {
 }
 
 func nixyVersion(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "nixy "+VERSION)
+	fmt.Fprintln(w, "version: "+version)
+	fmt.Fprintln(w, "commit: "+commit)
+	fmt.Fprintln(w, "date: "+date)
 	return
 }
 
 func main() {
 	configtoml := flag.String("f", "nixy.toml", "Path to config. (default nixy.toml)")
-	version := flag.Bool("v", false, "prints current nixy version")
+	versionflag := flag.Bool("v", false, "prints current nixy version")
 	flag.Parse()
-	if *version {
-		fmt.Println(VERSION)
+	if *versionflag {
+		fmt.Printf("version: %s\n", version)
+		fmt.Printf("commit: %s\n", commit)
+		fmt.Printf("date: %s\n", date)
 		os.Exit(0)
 	}
 	file, err := ioutil.ReadFile(*configtoml)
