@@ -24,7 +24,7 @@ import (
 // MarathonApps struct for our apps nested with tasks.
 type MarathonApps struct {
 	Apps []struct {
-		Id              string            `json:"id"`
+		ID              string            `json:"id"`
 		Labels          map[string]string `json:"labels"`
 		Env             map[string]string `json:"env"`
 		HealthChecks    []interface{}     `json:"healthChecks"`
@@ -34,12 +34,12 @@ type MarathonApps struct {
 			Labels   map[string]string `json:"labels"`
 		} `json:"portDefinitions"`
 		Tasks []struct {
-			AppId              string `json:"appId"`
+			AppID              string `json:"appId"`
 			HealthCheckResults []struct {
 				Alive bool `json:"alive"`
 			} `json:"healthCheckResults"`
 			Host         string  `json:"host"`
-			Id           string  `json:"id"`
+			ID           string  `json:"id"`
 			Ports        []int64 `json:"ports"`
 			ServicePorts []int64 `json:"servicePorts"`
 			StagedAt     string  `json:"stagedAt"`
@@ -285,7 +285,7 @@ func syncApps(jsonapps *MarathonApps) bool {
 						newapp.Hosts = append(newapp.Hosts, host)
 					} else {
 						logger.WithFields(logrus.Fields{
-							"app":       app.Id,
+							"app":       app.ID,
 							"subdomain": host,
 						}).Warn("invalid subdomain label")
 					}
@@ -299,7 +299,7 @@ func syncApps(jsonapps *MarathonApps) bool {
 						newapp.Hosts = append(newapp.Hosts, host)
 					} else {
 						logger.WithFields(logrus.Fields{
-							"app":       app.Id,
+							"app":       app.ID,
 							"subdomain": host,
 						}).Warn("invalid subdomain label")
 					}
@@ -308,7 +308,7 @@ func syncApps(jsonapps *MarathonApps) bool {
 				// If directories are used lets use them as subdomain dividers.
 				// Ex: /project/app becomes app.project
 				// Ex: /app becomes just app
-				domains := strings.Split(app.Id[1:], "/")
+				domains := strings.Split(app.ID[1:], "/")
 				for i, j := 0, len(domains)-1; i < j; i, j = i+1, j-1 {
 					domains[i], domains[j] = domains[j], domains[i]
 				}
@@ -321,7 +321,7 @@ func syncApps(jsonapps *MarathonApps) bool {
 					for _, newhost := range newapp.Hosts {
 						if newhost == host {
 							logger.WithFields(logrus.Fields{
-								"app":       app.Id,
+								"app":       app.ID,
 								"subdomain": host,
 							}).Warn("duplicate subdomain label")
 							// reset hosts if duplicate.
@@ -344,17 +344,16 @@ func syncApps(jsonapps *MarathonApps) bool {
 				}
 				newapp.PortDefinitions = append(newapp.PortDefinitions, pd)
 			}
-			apps[app.Id] = newapp
+			apps[app.ID] = newapp
 		}
 	}
 	// Not all events bring changes, so lets see if anything is new.
 	eq := reflect.DeepEqual(apps, config.Apps)
 	if eq {
 		return true
-	} else {
-		config.Apps = apps
-		return false
 	}
+	config.Apps = apps
+	return false
 }
 
 func writeConf() error {
@@ -365,7 +364,7 @@ func writeConf() error {
 		return err
 	}
 
-	parent := filepath.Dir(config.Nginx_config)
+	parent := filepath.Dir(config.NginxConfig)
 	tmpFile, err := ioutil.TempFile(parent, ".nginx.conf.tmp-")
 	defer tmpFile.Close()
 	lastConfig = tmpFile.Name()
@@ -378,11 +377,11 @@ func writeConf() error {
 	if err != nil {
 		return err
 	}
-	err = os.Rename(tmpFile.Name(), config.Nginx_config)
+	err = os.Rename(tmpFile.Name(), config.NginxConfig)
 	if err != nil {
 		return err
 	}
-	lastConfig = config.Nginx_config
+	lastConfig = config.NginxConfig
 	return nil
 }
 
@@ -401,7 +400,7 @@ func checkTmpl() error {
 }
 
 func getTmpl() (*template.Template, error) {
-	return template.New(filepath.Base(config.Nginx_template)).
+	return template.New(filepath.Base(config.NginxTemplate)).
 		Funcs(template.FuncMap{
 			"split":    strings.Split,
 			"join":     strings.Join,
@@ -409,16 +408,16 @@ func getTmpl() (*template.Template, error) {
 			"replace":  strings.Replace,
 			"getenv":   os.Getenv,
 			"datetime": time.Now}).
-		ParseFiles(config.Nginx_template)
+		ParseFiles(config.NginxTemplate)
 }
 
 func checkConf(path string) error {
 	// Always return OK if disabled in config.
-	if config.Nginx_ignore_check {
+	if config.NginxIgnoreCheck {
 		return nil
 	}
 	// This is to allow arguments as well. Example "docker exec nginx..."
-	args := strings.Fields(config.Nginx_cmd)
+	args := strings.Fields(config.NginxCmd)
 	head := args[0]
 	args = args[1:]
 	args = append(args, "-c")
@@ -439,7 +438,7 @@ func checkConf(path string) error {
 
 func reloadNginx() error {
 	// This is to allow arguments as well. Example "docker exec nginx..."
-	args := strings.Fields(config.Nginx_cmd)
+	args := strings.Fields(config.NginxCmd)
 	head := args[0]
 	args = args[1:]
 	args = append(args, "-s")

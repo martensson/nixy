@@ -17,6 +17,7 @@ import (
 	"github.com/peterbourgon/g2s"
 )
 
+// Task struct
 type Task struct {
 	Host         string
 	Ports        []int64
@@ -26,12 +27,14 @@ type Task struct {
 	Version      string
 }
 
+// PortDefinitions struct
 type PortDefinitions struct {
 	Port     int64
 	Protocol string
 	Labels   map[string]string
 }
 
+// App struct
 type App struct {
 	Tasks           []Task
 	Labels          map[string]string
@@ -40,23 +43,25 @@ type App struct {
 	PortDefinitions []PortDefinitions
 }
 
+// Config struct used by the template engine
 type Config struct {
 	sync.RWMutex
-	Xproxy             string
-	Realm              string
-	Port               string   `json:"-"`
-	Marathon           []string `json:"-"`
-	User               string   `json:"-"`
-	Pass               string   `json:"-"`
-	Nginx_config       string   `json:"-"`
-	Nginx_template     string   `json:"-"`
-	Nginx_cmd          string   `json:"-"`
-	Nginx_ignore_check bool     `json:"-"`
-	Statsd             StatsdConfig
-	LastUpdates        Updates
-	Apps               map[string]App
+	Xproxy           string
+	Realm            string
+	Port             string   `json:"-"`
+	Marathon         []string `json:"-"`
+	User             string   `json:"-"`
+	Pass             string   `json:"-"`
+	NginxConfig      string   `json:"-" toml:"nginx_config"`
+	NginxTemplate    string   `json:"-" toml:"nginx_template"`
+	NginxCmd         string   `json:"-" toml:"nginx_cmd"`
+	NginxIgnoreCheck bool     `json:"-" toml:"nginx_ignore_check"`
+	Statsd           StatsdConfig
+	LastUpdates      Updates
+	Apps             map[string]App
 }
 
+// Updates timings used for metrics
 type Updates struct {
 	LastSync           time.Time
 	LastConfigRendered time.Time
@@ -64,31 +69,37 @@ type Updates struct {
 	LastNginxReload    time.Time
 }
 
+// StatsdConfig statsd stuct
 type StatsdConfig struct {
 	Addr       string
 	Namespace  string
 	SampleRate int `toml:"sample_rate"`
 }
 
+// Status health status struct
 type Status struct {
 	Healthy bool
 	Message string
 }
 
+// EndpointStatus health status struct
 type EndpointStatus struct {
 	Endpoint string
 	Healthy  bool
 	Message  string
 }
 
+// Health struct
 type Health struct {
 	Config    Status
 	Template  Status
 	Endpoints []EndpointStatus
 }
 
+// VERSION set by ldflags
+var VERSION string
+
 // Global variables
-var VERSION string //added by goxc
 var config Config
 var statsd g2s.Statter
 var health Health
@@ -113,7 +124,7 @@ func newHealth() Health {
 	return h
 }
 
-func nixy_reload(w http.ResponseWriter, r *http.Request) {
+func nixyReload(w http.ResponseWriter, r *http.Request) {
 	logger.WithFields(logrus.Fields{
 		"client": r.RemoteAddr,
 	}).Info("marathon reload triggered")
@@ -129,7 +140,7 @@ func nixy_reload(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func nixy_health(w http.ResponseWriter, r *http.Request) {
+func nixyHealth(w http.ResponseWriter, r *http.Request) {
 	err := checkTmpl()
 	if err != nil {
 		health.Template.Message = err.Error()
@@ -148,14 +159,14 @@ func nixy_health(w http.ResponseWriter, r *http.Request) {
 		health.Config.Message = "OK"
 		health.Config.Healthy = true
 	}
-	all_backends_down := true
+	allBackendsDown := true
 	for _, endpoint := range health.Endpoints {
 		if endpoint.Healthy {
-			all_backends_down = false
+			allBackendsDown = false
 			break
 		}
 	}
-	if all_backends_down {
+	if allBackendsDown {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.Header().Add("Content-Type", "application/json; charset=utf-8")
@@ -164,14 +175,14 @@ func nixy_health(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func nixy_config(w http.ResponseWriter, r *http.Request) {
+func nixyConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json; charset=utf-8")
 	b, _ := json.MarshalIndent(&config, "", "  ")
 	w.Write(b)
 	return
 }
 
-func nixy_version(w http.ResponseWriter, r *http.Request) {
+func nixyVersion(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "nixy "+VERSION)
 	return
 }
@@ -203,10 +214,10 @@ func main() {
 	statsd, _ = setupStatsd()
 
 	mux := mux.NewRouter()
-	mux.HandleFunc("/", nixy_version)
-	mux.HandleFunc("/v1/reload", nixy_reload)
-	mux.HandleFunc("/v1/config", nixy_config)
-	mux.HandleFunc("/v1/health", nixy_health)
+	mux.HandleFunc("/", nixyVersion)
+	mux.HandleFunc("/v1/reload", nixyReload)
+	mux.HandleFunc("/v1/config", nixyConfig)
+	mux.HandleFunc("/v1/health", nixyHealth)
 	s := &http.Server{
 		Addr:    ":" + config.Port,
 		Handler: mux,
