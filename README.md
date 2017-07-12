@@ -1,6 +1,6 @@
-# nixy [![Build Status](https://travis-ci.org/martensson/nixy.svg?branch=master)](https://travis-ci.org/martensson/nixy)
-![nginx
-gopher](https://raw.githubusercontent.com/martensson/nixy/master/nixy-gopher.png)
+# nixy [![Build Status](https://travis-ci.org/martensson/nixy.svg?branch=master)](https://travis-ci.org/martensson/nixy) [![license](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](https://github.com/martensson/nixy/blob/master/LICENSE) [![release](https://img.shields.io/github/release/martensson/nixy.svg?style=flat-square)](https://github.com/martensson/nixy/releases/latest)
+
+![nginx gopher](https://raw.githubusercontent.com/martensson/nixy/master/nixy-gopher.png)
 
 Nixy is a daemon that automatically configures Nginx for web services deployed on [Apache Mesos](http://mesos.apache.org) and [Marathon](https://mesosphere.github.io/marathon/).
 
