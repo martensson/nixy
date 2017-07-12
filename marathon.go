@@ -21,7 +21,7 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
-// Struct for our apps nested with tasks.
+// MarathonApps struct for our apps nested with tasks.
 type MarathonApps struct {
 	Apps []struct {
 		Id              string            `json:"id"`
@@ -56,7 +56,7 @@ func eventStream() {
 			Transport: tr,
 		}
 		ticker := time.NewTicker(1 * time.Second)
-		for _ = range ticker.C {
+		for range ticker.C {
 			var endpoint string
 			for _, es := range health.Endpoints {
 				if es.Healthy == true {
@@ -369,7 +369,7 @@ func writeConf() error {
 	tmpFile, err := ioutil.TempFile(parent, ".nginx.conf.tmp-")
 	defer tmpFile.Close()
 	lastConfig = tmpFile.Name()
-	err = template.Execute(tmpFile, config)
+	err = template.Execute(tmpFile, &config)
 	if err != nil {
 		return err
 	}
@@ -393,7 +393,7 @@ func checkTmpl() error {
 	if err != nil {
 		return err
 	}
-	err = t.Execute(ioutil.Discard, config)
+	err = t.Execute(ioutil.Discard, &config)
 	if err != nil {
 		return err
 	}
@@ -420,7 +420,7 @@ func checkConf(path string) error {
 	// This is to allow arguments as well. Example "docker exec nginx..."
 	args := strings.Fields(config.Nginx_cmd)
 	head := args[0]
-	args = args[1:len(args)]
+	args = args[1:]
 	args = append(args, "-c")
 	args = append(args, path)
 	args = append(args, "-t")
@@ -441,7 +441,7 @@ func reloadNginx() error {
 	// This is to allow arguments as well. Example "docker exec nginx..."
 	args := strings.Fields(config.Nginx_cmd)
 	head := args[0]
-	args = args[1:len(args)]
+	args = args[1:]
 	args = append(args, "-s")
 	args = append(args, "reload")
 	cmd := exec.Command(head, args...)

@@ -166,7 +166,7 @@ func nixy_health(w http.ResponseWriter, r *http.Request) {
 
 func nixy_config(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json; charset=utf-8")
-	b, _ := json.MarshalIndent(config, "", "  ")
+	b, _ := json.MarshalIndent(&config, "", "  ")
 	w.Write(b)
 	return
 }
