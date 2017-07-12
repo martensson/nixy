@@ -1,4 +1,4 @@
-# nixy [![Build Status](https://travis-ci.org/martensson/nixy.svg?branch=master)](https://travis-ci.org/martensson/nixy) [![license](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](https://github.com/martensson/nixy/blob/master/LICENSE) [![release](https://img.shields.io/github/release/martensson/nixy.svg?style=flat-square)](https://github.com/martensson/nixy/releases/latest)
+# nixy [![release](https://img.shields.io/github/release/martensson/nixy.svg?style=flat-square)](https://github.com/martensson/nixy/releases/latest) [![Build Status](https://travis-ci.org/martensson/nixy.svg?branch=master)](https://travis-ci.org/martensson/nixy) [![Go Report Card](https://goreportcard.com/badge/github.com/martensson/nixy)](https://goreportcard.com/report/github.com/martensson/nixy) [![license](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](https://github.com/martensson/nixy/blob/master/LICENSE)
 
 ![nginx gopher](https://raw.githubusercontent.com/martensson/nixy/master/nixy-gopher.png)
 
