@@ -1,5 +1,5 @@
 language: go
 go:
-  - tip
+  - 1.8.x
 after_success:
   - test -n "$TRAVIS_TAG" && curl -sL https://git.io/goreleaser | bash
