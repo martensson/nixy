@@ -56,6 +56,8 @@ type Config struct {
 	NginxTemplate    string   `json:"-" toml:"nginx_template"`
 	NginxCmd         string   `json:"-" toml:"nginx_cmd"`
 	NginxIgnoreCheck bool     `json:"-" toml:"nginx_ignore_check"`
+	LeftDelimiter    string   `json:"-" toml:"left_delimiter"`
+	RightDelimiter   string   `json:"-" toml:"right_delimiter"`
 	Statsd           StatsdConfig
 	LastUpdates      Updates
 	Apps             map[string]App
@@ -100,7 +102,7 @@ type Health struct {
 var version = "master" //set by ldflags
 var date string        //set by ldflags
 var commit string      //set by ldflags
-var config Config
+var config = Config{LeftDelimiter: "{{", RightDelimiter: "}}"}
 var statsd g2s.Statter
 var health Health
 var lastConfig string
@@ -216,7 +218,6 @@ func main() {
 		config.Xproxy, _ = os.Hostname()
 	}
 	statsd, _ = setupStatsd()
-
 	mux := mux.NewRouter()
 	mux.HandleFunc("/", nixyVersion)
 	mux.HandleFunc("/v1/reload", nixyReload)

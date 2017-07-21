@@ -31,11 +31,12 @@ Nixy is a daemon that automatically configures Nginx for web services deployed o
 1. Install nixy from pre-compiled packages. Check `releases` page.
 2. Edit config *(default on ubuntu is /etc/nixy.toml)*:
 
-    ``` tom
+    ``` toml
     # Nixy listening port
     port = "6000"
     # X-Proxy header, defaults to hostname
     xproxy = ""
+
     # Marathon API
     marathon = ["http://example01:8080", "http://example02:8080"] # add all HA cluster nodes in priority order.
     user = "" # leave empty if no auth is required.
@@ -43,11 +44,15 @@ Nixy is a daemon that automatically configures Nginx for web services deployed o
     # Nixy realm, set this if you want to be able to filter your apps (e.g. when you have different loadbalancers which should expose different apps)
     # You will also need to set "NIXY_REALM" label at your app to be included in generated conf
     realm = ""
+
     # Nginx
     nginx_config = "/etc/nginx/nginx.conf"
     nginx_template = "/etc/nginx/nginx.tmpl"
     nginx_cmd = "nginx" # optionally "openresty" or "docker exec nginx nginx"
     nginx_ignore_check = false # optionally disable nginx config test. Health check will always show OK.
+    #left_delimiter = "{{" # if you want to change the default template delimiters
+    #right_delimiter = "}}" # if you want to change the default template delimiters
+
     # Statsd settings
     [statsd]
     addr = "localhost:8125" # optional for statistics
