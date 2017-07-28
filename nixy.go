@@ -217,7 +217,13 @@ func main() {
 	if config.Xproxy == "" {
 		config.Xproxy, _ = os.Hostname()
 	}
-	statsd, _ = setupStatsd()
+	statsd, err = setupStatsd()
+	if err != nil {
+		logger.WithFields(logrus.Fields{
+			"error": err.Error(),
+		}).Error("unable to Dial statsd")
+		statsd = g2s.Noop() //fallback to Noop.
+	}
 	mux := mux.NewRouter()
 	mux.HandleFunc("/", nixyVersion)
 	mux.HandleFunc("/v1/reload", nixyReload)
