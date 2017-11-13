@@ -249,6 +249,10 @@ func syncApps(jsonapps *MarathonApps) bool {
 			if len(task.Ports) == 0 {
 				continue
 			}
+			// also skip of there is no host set.
+			if task.Host == "" {
+				continue
+			}
 			if len(app.HealthChecks) > 0 {
 				if len(task.HealthCheckResults) == 0 {
 					// this means tasks is being deployed but not yet monitored as alive. Assume down.
