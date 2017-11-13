@@ -34,6 +34,11 @@ type PortDefinitions struct {
 	Labels   map[string]string
 }
 
+// HealthCheck struct
+type HealthCheck struct {
+	Path string
+}
+
 // App struct
 type App struct {
 	Tasks           []Task
@@ -41,6 +46,7 @@ type App struct {
 	Env             map[string]string
 	Hosts           []string
 	PortDefinitions []PortDefinitions
+	HealthChecks	[]HealthCheck
 }
 
 // Config struct used by the template engine
