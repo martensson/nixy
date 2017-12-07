@@ -41,12 +41,14 @@ type MarathonApps struct {
 			ID           string  `json:"id"`
 			Ports        []int64 `json:"ports"`
 			ServicePorts []int64 `json:"servicePorts"`
+			SlaveID      string  `json:"slaveId"`
 			StagedAt     string  `json:"stagedAt"`
 			StartedAt    string  `json:"startedAt"`
+			State        string  `json:"state"`
 			Version      string  `json:"version"`
 		} `json:"tasks"`
 		HealthChecks []struct {
-			Path                   string `json:"path"`
+			Path string `json:"path"`
 		} `json:"healthChecks"`
 	} `json:"apps"`
 }
@@ -273,11 +275,15 @@ func syncApps(jsonapps *MarathonApps) bool {
 				}
 			}
 			var newtask = Task{}
+			newtask.AppID = task.AppID
 			newtask.Host = task.Host
+			newtask.ID = task.ID
 			newtask.Ports = task.Ports
 			newtask.ServicePorts = task.ServicePorts
+			newtask.SlaveID = task.SlaveID
 			newtask.StagedAt = task.StagedAt
 			newtask.StartedAt = task.StartedAt
+			newtask.State = task.State
 			newtask.Version = task.Version
 			newapp.Tasks = append(newapp.Tasks, newtask)
 		}

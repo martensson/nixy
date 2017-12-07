@@ -19,11 +19,15 @@ import (
 
 // Task struct
 type Task struct {
+	AppID        string
 	Host         string
+	ID           string
 	Ports        []int64
 	ServicePorts []int64
+	SlaveID      string
 	StagedAt     string
 	StartedAt    string
+	State        string
 	Version      string
 }
 
@@ -46,7 +50,7 @@ type App struct {
 	Env             map[string]string
 	Hosts           []string
 	PortDefinitions []PortDefinitions
-	HealthChecks	[]HealthCheck
+	HealthChecks    []HealthCheck
 }
 
 // Config struct used by the template engine
