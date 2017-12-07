@@ -257,6 +257,10 @@ func syncApps(jsonapps *MarathonApps) bool {
 			if task.Host == "" {
 				continue
 			}
+			// ignore tasks that are not explicitly running (staging, starting, killing, unreachable, etc)
+			if task.State != "TASK_RUNNING" {
+				continue
+			}
 			if len(app.HealthChecks) > 0 {
 				if len(task.HealthCheckResults) == 0 {
 					// this means tasks is being deployed but not yet monitored as alive. Assume down.
