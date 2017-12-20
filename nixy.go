@@ -38,6 +38,20 @@ type PortDefinitions struct {
 	Labels   map[string]string
 }
 
+// PortMappings struct
+type PortMappings struct {
+	ContainerPort   int64
+	HostPort     	int64
+	Labels  		map[string]string
+	Protocol 		string
+	ServicePort     int64
+}
+
+// Container struct
+type Container struct {
+	PortMappings	[]PortMappings
+}
+
 // HealthCheck struct
 type HealthCheck struct {
 	Path string
@@ -51,6 +65,7 @@ type App struct {
 	Hosts           []string
 	PortDefinitions []PortDefinitions
 	HealthChecks    []HealthCheck
+	Container		Container
 }
 
 // Config struct used by the template engine
