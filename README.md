@@ -140,6 +140,30 @@ add_header X-Environment {{ $app.Env.APP_ENV }} always;
 
 #### Additional template methods
 
+##### contains
+
+Wrapper for [strings.Contains](http://golang.org/pkg/strings/#Contains). Contains reports whether substr is within string. 
+
+```
+{{if contains $host "www" }}
+```
+
+##### hasPrefix
+
+Wrapper for [strings.HasPrefix](http://golang.org/pkg/strings/#HasPrefix). HasPrefix tests whether the string s begins with prefix.
+
+```
+{{if hasPrefix $host "www" }}
+```
+
+##### hasSuffix
+
+Wrapper for [strings.HasSuffix](http://golang.org/pkg/strings/#HasSuffix). HasSuffix tests whether the string s ends with suffix.
+
+```
+{{if hasSuffix $host ".com" }}
+```
+
 ##### split
 
 Wrapper for [strings.Split](http://golang.org/pkg/strings/#Split). Splits the input string on the separating string and returns a slice of substrings.
