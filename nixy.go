@@ -35,21 +35,22 @@ type Task struct {
 type PortDefinitions struct {
 	Port     int64
 	Protocol string
+	Name     string
 	Labels   map[string]string
 }
 
 // PortMappings struct
 type PortMappings struct {
-	ContainerPort   int64
-	HostPort     	int64
-	Labels  		map[string]string
-	Protocol 		string
-	ServicePort     int64
+	ContainerPort int64
+	HostPort      int64
+	Labels        map[string]string
+	Protocol      string
+	ServicePort   int64
 }
 
 // Container struct
 type Container struct {
-	PortMappings	[]PortMappings
+	PortMappings []PortMappings
 }
 
 // HealthCheck struct
@@ -65,7 +66,7 @@ type App struct {
 	Hosts           []string
 	PortDefinitions []PortDefinitions
 	HealthChecks    []HealthCheck
-	Container		Container
+	Container       Container
 }
 
 // Config struct used by the template engine

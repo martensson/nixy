@@ -30,15 +30,16 @@ type MarathonApps struct {
 		PortDefinitions []struct {
 			Port     int64             `json:"port"`
 			Protocol string            `json:"protocol"`
+			Name     string            `json:"name"`
 			Labels   map[string]string `json:"labels"`
 		} `json:"portDefinitions"`
 		Container struct {
 			PortMappings []struct {
-				ContainerPort   int64             `json:"containerPort"`
-				HostPort     	int64             `json:"hostPort"`
-				Labels  		map[string]string `json:"labels"`
-				Protocol 		string            `json:"protocol"`
-				ServicePort     int64             `json:"servicePort"`
+				ContainerPort int64             `json:"containerPort"`
+				HostPort      int64             `json:"hostPort"`
+				Labels        map[string]string `json:"labels"`
+				Protocol      string            `json:"protocol"`
+				ServicePort   int64             `json:"servicePort"`
 			} `json:"portMappings"`
 		} `json:"container"`
 		Tasks []struct {
@@ -371,6 +372,7 @@ func syncApps(jsonapps *MarathonApps) bool {
 				pd := PortDefinitions{
 					Port:     pds.Port,
 					Protocol: pds.Protocol,
+					Name:     pds.Name,
 					Labels:   pds.Labels,
 				}
 				newapp.PortDefinitions = append(newapp.PortDefinitions, pd)
@@ -378,11 +380,11 @@ func syncApps(jsonapps *MarathonApps) bool {
 
 			for _, pms := range app.Container.PortMappings {
 				pm := PortMappings{
-					ContainerPort:	pms.ContainerPort,
-					HostPort:		pms.HostPort,
-					Labels: 		pms.Labels,
-					Protocol:		pms.Protocol,
-					ServicePort: 	pms.ServicePort,
+					ContainerPort: pms.ContainerPort,
+					HostPort:      pms.HostPort,
+					Labels:        pms.Labels,
+					Protocol:      pms.Protocol,
+					ServicePort:   pms.ServicePort,
 				}
 				newapp.Container.PortMappings = append(newapp.Container.PortMappings, pm)
 			}
