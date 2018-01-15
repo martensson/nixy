@@ -425,12 +425,15 @@ func getTmpl() (*template.Template, error) {
 	return template.New(filepath.Base(config.NginxTemplate)).
 		Delims(config.LeftDelimiter, config.RightDelimiter).
 		Funcs(template.FuncMap{
-			"split":    strings.Split,
-			"join":     strings.Join,
-			"trim":     strings.Trim,
-			"replace":  strings.Replace,
-			"getenv":   os.Getenv,
-			"datetime": time.Now}).
+			"hasPrefix": strings.HasPrefix,
+			"hasSuffix": strings.HasPrefix,
+			"contains":  strings.Contains,
+			"split":     strings.Split,
+			"join":      strings.Join,
+			"trim":      strings.Trim,
+			"replace":   strings.Replace,
+			"getenv":    os.Getenv,
+			"datetime":  time.Now}).
 		ParseFiles(config.NginxTemplate)
 }
 
