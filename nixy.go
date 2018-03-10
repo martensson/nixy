@@ -15,6 +15,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/gorilla/mux"
 	"github.com/peterbourgon/g2s"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // Task struct
@@ -250,11 +251,13 @@ func main() {
 		}).Error("unable to Dial statsd")
 		statsd = g2s.Noop() //fallback to Noop.
 	}
+	setupPrometheusMetrics()
 	mux := mux.NewRouter()
 	mux.HandleFunc("/", nixyVersion)
 	mux.HandleFunc("/v1/reload", nixyReload)
 	mux.HandleFunc("/v1/config", nixyConfig)
 	mux.HandleFunc("/v1/health", nixyHealth)
+	mux.Handle("/v1/metrics", promhttp.Handler())
 	s := &http.Server{
 		Addr:    ":" + config.Port,
 		Handler: mux,
