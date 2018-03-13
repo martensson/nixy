@@ -3,6 +3,7 @@ nixy
 dist
 nginx.conf
 .nginx.conf.tmp-*
+nixy-go.ai
 
 # Vim's swap
 *.sw[a-z]
