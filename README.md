@@ -19,7 +19,7 @@ Nixy is a daemon that automatically configures Nginx for web services deployed o
 * Automatic service discovery of all running tasks inside Mesos/Marathon, including their health status.
 * Basic auth support.
 * Health checks for errors in template, nginx config or Marathon endpoints.
-* Built-in Prometheus exporter for metrics and alerts.
+* Built-in [Prometheus](https://prometheus.io/) exporter for metrics and alerts.
 * ....
 
 ## Compatibility
