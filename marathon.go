@@ -80,6 +80,7 @@ func eventStream() {
 			}
 			if endpoint == "" {
 				logger.Error("all endpoints are down")
+				go countAllEndpointsDownErrors.Inc()
 				continue
 			}
 			req, err := http.NewRequest("GET", endpoint+"/v2/events", nil)
@@ -88,6 +89,7 @@ func eventStream() {
 					"error":    err.Error(),
 					"endpoint": endpoint,
 				}).Error("unable to create event stream request")
+				go countMarathonStreamErrors.Inc()
 				continue
 			}
 			req.Header.Set("Accept", "text/event-stream")
@@ -100,6 +102,7 @@ func eventStream() {
 			timer := time.AfterFunc(15*time.Second, func() {
 				cancel()
 				logger.Warn("No data for 15s, event stream request was cancelled")
+				go countMarathonStreamNoDataWarnings.Inc()
 			})
 			req = req.WithContext(ctx)
 			resp, err := client.Do(req)
@@ -108,6 +111,7 @@ func eventStream() {
 					"error":    err.Error(),
 					"endpoint": endpoint,
 				}).Error("unable to access Marathon event stream")
+				go countMarathonStreamErrors.Inc()
 				// expire request cancellation timer immediately
 				timer.Reset(100 * time.Millisecond)
 				continue
@@ -123,6 +127,7 @@ func eventStream() {
 						"error":    err.Error(),
 						"endpoint": endpoint,
 					}).Error("error reading Marathon event stream")
+					go countMarathonStreamErrors.Inc()
 					resp.Body.Close()
 					break
 				}
@@ -133,6 +138,7 @@ func eventStream() {
 					"event":    strings.TrimSpace(line[6:]),
 					"endpoint": endpoint,
 				}).Info("marathon event received")
+				go countMarathonEventsReceived.Inc()
 				select {
 				case eventqueue <- true: // add reload to our queue channel, unless it is full of course.
 				default:
@@ -175,6 +181,7 @@ func endpointHealth() {
 							"error":    err.Error(),
 							"endpoint": es.Endpoint,
 						}).Error("endpoint is down")
+						go countEndpointDownErrors.Inc()
 						health.Endpoints[i].Healthy = false
 						health.Endpoints[i].Message = err.Error()
 						continue
@@ -185,6 +192,7 @@ func endpointHealth() {
 							"status":   resp.StatusCode,
 							"endpoint": es.Endpoint,
 						}).Error("endpoint check failed")
+						go countEndpointCheckFails.Inc()
 						health.Endpoints[i].Healthy = false
 						health.Endpoints[i].Message = resp.Status
 						continue
@@ -314,6 +322,7 @@ func syncApps(jsonapps *MarathonApps) bool {
 							"app":       app.ID,
 							"subdomain": host,
 						}).Warn("invalid subdomain label")
+						go countInvalidSubdomainLabelWarnings.Inc()
 					}
 				}
 				// to be compatible with moxy, will probably be removed eventually.
@@ -328,6 +337,7 @@ func syncApps(jsonapps *MarathonApps) bool {
 							"app":       app.ID,
 							"subdomain": host,
 						}).Warn("invalid subdomain label")
+						go countInvalidSubdomainLabelWarnings.Inc()
 					}
 				}
 			} else {
@@ -350,6 +360,7 @@ func syncApps(jsonapps *MarathonApps) bool {
 								"app":       app.ID,
 								"subdomain": host,
 							}).Warn("duplicate subdomain label")
+							go countDuplicateSubdomainLabelWarnings.Inc()
 							// reset hosts if duplicate.
 							newapp.Hosts = nil
 						}
@@ -513,6 +524,7 @@ func reload() {
 			"error": err.Error(),
 		}).Error("unable to sync from marathon")
 		go statsCount("reload.failed", 1)
+		go countFailedReloads.Inc()
 		return
 	}
 	equal := syncApps(&jsonapps)
@@ -527,6 +539,7 @@ func reload() {
 			"error": err.Error(),
 		}).Error("unable to generate nginx config")
 		go statsCount("reload.failed", 1)
+		go countFailedReloads.Inc()
 		return
 	}
 	config.LastUpdates.LastConfigValid = time.Now()
@@ -536,6 +549,7 @@ func reload() {
 			"error": err.Error(),
 		}).Error("unable to reload nginx")
 		go statsCount("reload.failed", 1)
+		go countFailedReloads.Inc()
 		return
 	}
 	elapsed := time.Since(start)
@@ -544,6 +558,8 @@ func reload() {
 	}).Info("config updated")
 	go statsCount("reload.success", 1)
 	go statsTiming("reload.time", elapsed)
+	go countSuccessfulReloads.Inc()
+	go observeReloadTimeMetric(elapsed)
 	config.LastUpdates.LastNginxReload = time.Now()
 	return
 }
