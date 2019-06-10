@@ -30,6 +30,7 @@ type Task struct {
 	StartedAt    string
 	State        string
 	Version      string
+	Labels       map[string]string
 }
 
 // PortDefinitions struct
@@ -140,6 +141,63 @@ var eventqueue = make(chan bool, 2)
 
 // Global http transport for connection reuse
 var tr = &http.Transport{MaxIdleConnsPerHost: 10}
+
+func (c *Config) MergeAppsByLabel(label string) map[string]App {
+	apps := make(map[string]App, 0)
+	labeledApps := make(map[string][]App, 0)
+	for appID, app := range c.Apps {
+		if labelValue, has := app.Labels[label]; has {
+			labeledApps[labelValue] = append(labeledApps[labelValue], app)
+		} else {
+			apps[appID] = app
+		}
+	}
+
+	for id, appGroup := range labeledApps {
+		apps[id] = mergeApps(appGroup)
+	}
+	return apps
+}
+
+func mergeApps(apps []App) App {
+	tasks := make([]Task, 0)
+	labels := make(map[string]string, 0)
+	env := make(map[string]string, 0)
+	hosts := make([]string, 0)
+	portDefs := make([]PortDefinitions, 0)
+	seenPorts := make(map[int64]bool, 0)
+
+	for _, app := range apps {
+		for k, v := range app.Labels {
+			labels[k] = v
+		}
+		for k, v := range app.Env {
+			env[k] = v
+		}
+		for _, h := range app.Hosts {
+			hosts = append(hosts, h)
+		}
+		for _, t := range app.Tasks {
+			t.Labels = app.Labels
+			tasks = append(tasks, t)
+		}
+		for _, def := range app.PortDefinitions {
+			if _, seen := seenPorts[def.Port]; !seen {
+				seenPorts[def.Port] = true
+				portDefs = append(portDefs, def)
+			}
+		}
+	}
+	return App{
+		Tasks:           tasks,
+		Labels:          labels,
+		Env:             env,
+		Hosts:           hosts,
+		PortDefinitions: portDefs,
+		HealthChecks:    apps[0].HealthChecks,
+		Container:       Container{},
+	}
+}
 
 func newHealth() Health {
 	var h Health
